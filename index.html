@@ -10,14 +10,25 @@
 <body onload="start()">
     <div id="container">
         <div id="menu-container">
+            <div id="button-container">
+                <canvas id="button" width="30px" height="30px"></canvas>
+            </div>
             <button id="undo">undo</button>
             <button id="redo">redo</button>
+        </div>
+
+        <div id="container2">
+            <div id="empty-container">
+            </div>
+            <div id="bar-container">
+                <canvas id="bar" width="3000px" height="40px"></canvas>
+            </div>
         </div>
 
         <div id="piano-container">
             <canvas id="piano" height="1000px"></canvas>
         </div>
-        
+
         <div id="editor-container">
             <canvas id="background" width="3000px" height="1000px"></canvas>
             <canvas id="score" width="3000px" height="1000px"></canvas>
