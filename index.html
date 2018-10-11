@@ -8,10 +8,15 @@
     <script src="main.js"></script>
 </head>
 <body onload="start()">
+    <audio id="testAudio" preload="auto">
+        <source src="" type="audio/wav">
+    </audio>
     <div id="container">
         <div id="menu-container">
             <button id="undo">undo</button>
             <button id="redo">redo</button>
+            <button id="play">play</button>
+            <button id="download">download</button>
         </div>
 
         <div id="piano-container">

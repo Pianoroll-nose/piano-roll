@@ -16,6 +16,18 @@ function start(){
     menu = new Menu();
 }
 
+
+class Util {
+    constructor() {
+    }
+
+    downloadScore(score) {
+        const url = document.createElement("a");
+        url.download = 'test.json';
+        url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
+        url.click();
+    }
+}
 //Menuバーのイベントから他のクラスに処理を促すクラス
 class Menu {
     constructor() {
@@ -27,9 +39,16 @@ class Menu {
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
         this.piano = new Piano(this.verticalNum);
+        this.util = new Util();
 
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
+        document.getElementById('play').onclick = () => {
+            document.getElementById('testAudio').play();
+        }
+        document.getElementById('download').onclick = () => {
+            this.util.downloadScore(this.editor.getScore());
+        }
     }
 }
 
@@ -51,12 +70,8 @@ class Piano {
         const pianoCellHeight = this.areaHeight / this.verticalNum;
 
         for(let h = 0; h <= this.areaHeight; h += pianoCellHeight){
+            this.ctx.strokeStyle = "gray";
 
-//            if(h / pianoCellHeight % 12 == 0 || h / pianoCellHeight % 12 == 7) {
-//                this.ctx.strokeStyle = "black";
-//            } else {
-                  this.ctx.strokeStyle = "gray";
-//            }
 
             this.ctx.beginPath();
             this.ctx.moveTo(0, h);
@@ -105,6 +120,10 @@ class Editor {
     draw() {
         this.backGround.draw(this.ctx);
         this.score.draw(this.ctx);
+    }
+
+    getScore() {
+        return this.score.score;
     }
 }
 
@@ -182,11 +201,12 @@ class Score {
             lyric: "あ",
             pitch: null
         };
-        
+
         this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-        this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-        this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+        window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+        window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
         this.draw();
+
     }   
 
     draw() {
@@ -370,7 +390,7 @@ class Score {
 
     onMouseUp(e) {
         if(this.isDragging){
-            const rect = e.target.getBoundingClientRect();
+            const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             this.dragProperty.end = Math.max(this.dragProperty.start, Math.floor(x / this.cellWidth));
             this.isDragging = false;
@@ -389,7 +409,7 @@ class Score {
 
     onMouseMove(e) {
         if(this.isDragging){
-            const rect = e.target.getBoundingClientRect();
+            const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             this.dragProperty.end = Math.max(this.dragProperty.start, Math.floor(x / this.cellWidth));
             this.draw();
