@@ -23,7 +23,7 @@ class Util {
 
     downloadScore(score) {
         const url = document.createElement("a");
-        url.download = 'test.json';
+        url.download = document.getElementById('scoreName').value || 'score';
         url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
         url.click();
     }
