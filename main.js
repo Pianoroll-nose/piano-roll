@@ -1,4 +1,5 @@
 function start(){
+    let bContainer = document.getElementById("bar-container");
     let pContainer = document.getElementById("piano-container");
     let eContainer = document.getElementById("editor-container");
     //canvasの幅をdivの幅に揃える
@@ -8,9 +9,17 @@ function start(){
     pContainer.onscroll = function(){
         eContainer.scrollTop = this.scrollTop;
     };
-    
+
     eContainer.onscroll = function(){
         pContainer.scrollTop = this.scrollTop;
+    };
+
+    bContainer.onscroll = function(){
+        eContainer.scrollLeft = this.scrollLeft;
+    };
+
+    eContainer.onscroll = function(){
+        bContainer.scrollLeft = this.scrollLeft;
     };
 
     menu = new Menu();
@@ -74,6 +83,7 @@ class Util {
         document.getElementById('testAudio').src = url.href;
     }
 }
+
 //Menuバーのイベントから他のクラスに処理を促すクラス
 class Menu {
     constructor() {
@@ -83,10 +93,12 @@ class Menu {
         this.verticalNum = 24;
         this.beats = 4;     //何分の何拍子みたいなやつ
 
+        this.button = new Button();
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
         this.piano = new Piano(this.verticalNum);
         this.util = new Util();
-
+        this.bar = new Bar(this.verticalNum);
+      
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
         document.getElementById('play').onclick = () => {
@@ -102,6 +114,90 @@ class Menu {
         document.getElementById('downloadScore').onclick = () => {
             this.util.downloadScore(this.editor.getScore());
         }
+
+    }
+}
+
+class Button {
+    constructor() {
+        this.canvas = document.getElementById("button");
+        this.ctx = this.canvas.getContext("2d");
+        this.areaWidth = this.canvas.clientWidth;
+        this.areaHeight = this.canvas.clientHeight;
+
+        this.canvas.addEventListener('click', this.onClick.bind(this), false);
+        this.draw();
+    }
+
+    draw() {
+        this.ctx.strokeStyle = "black";
+        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight);
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.areaWidth / 4, this.areaHeight / 4);
+        this.ctx.lineTo(this.areaWidth * 3 / 4, this.areaHeight / 2);
+        this.ctx.lineTo(this.areaWidth / 4, this.areaHeight * 3 / 4);
+        this.ctx.closePath();
+
+        this.ctx.strokeStyle = "black";
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = "black";
+        this.ctx.fill();
+    }
+
+    onClick(e) {
+        let barCanvas = document.getElementById("bar");
+        let barCtx = barCanvas.getContext("2d");
+
+        var x = 0;
+
+        (function animation() {
+            barCtx.clearRect(0, 0, 3000, 40);
+            barCtx.strokeStyle = "black";
+            barCtx.strokeRect(0, 0, 3000, 20);
+
+            barCtx.strokeStyle = "green";
+
+            barCtx.beginPath();
+            barCtx.moveTo(x - 15, 0);
+            barCtx.lineTo(x + 15, 0);
+            barCtx.lineTo(x, 19);
+            barCtx.closePath();
+
+            barCtx.strokeStyle = "green";
+            barCtx.stroke();
+
+            barCtx.fillStyle = "green";
+            barCtx.fill();
+
+            if (x > 3000) {
+                x = 0;
+            } else {
+                x += 2;
+                requestAnimationFrame(animation);
+            }
+
+
+        })();
+
+    }
+}
+
+class Bar {
+    constructor(verticalNum) {
+        this.canvas = document.getElementById("bar");
+        this.ctx = this.canvas.getContext("2d");
+        this.areaWidth = this.canvas.clientWidth;
+        this.areaHeight = this.canvas.clientHeight;
+
+        this.verticalNum = verticalNum;
+        this.draw();
+    }
+
+    draw() {
+        this.ctx.strokeStyle = "black";
+        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight * 1 / 2);
     }
 }
 
@@ -259,8 +355,7 @@ class Score {
         window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
         window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
         this.draw();
-
-    }   
+    }
 
     draw() {
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
