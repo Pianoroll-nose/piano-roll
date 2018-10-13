@@ -27,6 +27,52 @@ class Util {
         url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
         url.click();
     }
+
+    //https://qiita.com/HirokiTanaka/items/56f80844f9a32020ee3b (10/13)
+    //http://www.ys-labo.com/pc/2009/091223%20File.html (10/13)
+    createWav(audioData) { 
+        const buf = new ArrayBuffer(44 + audioData.length);
+        const view = new DataView(buf);
+
+        const writeString = (offset, string) => {
+            for(let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        //ヘッダ情報の書き込み
+        //44100Hz, 8bit
+        writeString(0, 'RIFF'); //RIFFヘッダ
+        view.setUint32(4, 32+audioData.length, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, 44100, true);
+        view.setUint32(28, 44100, true);
+        view.setUint16(32, 1, true);
+        view.setUint16(34, 8, true);
+        writeString(36, 'data');
+        view.setUint32(40, audioData.length, true);
+        
+        for(let i = 0, offset = 44; i < audioData.length; i++, offset++) {
+            view.setUint8(offset, audioData[i], true);
+        }
+
+        return buf;
+    }
+
+    downloadWav(audioData) {
+        const wav = this.createWav(audioData);
+        const url = document.createElement("a");
+        url.download = document.getElementById('wavName').value || 'audio';
+        url.href = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
+        url.click();
+
+        //音声再生のテスト用
+        document.getElementById('testAudio').src = url.href;
+    }
 }
 //Menuバーのイベントから他のクラスに処理を促すクラス
 class Menu {
@@ -46,7 +92,14 @@ class Menu {
         document.getElementById('play').onclick = () => {
             document.getElementById('testAudio').play();
         }
-        document.getElementById('download').onclick = () => {
+        document.getElementById('downloadWav').onclick = () => {
+            let audioData = [];
+            for(var i = 0; i < 44100*2; i++){
+                audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
+            }
+            this.util.downloadWav(audioData);
+        }
+        document.getElementById('downloadScore').onclick = () => {
             this.util.downloadScore(this.editor.getScore());
         }
     }
