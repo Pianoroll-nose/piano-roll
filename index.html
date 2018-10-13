@@ -8,6 +8,9 @@
     <script src="main.js"></script>
 </head>
 <body onload="start()">
+    <audio id="testAudio" preload="auto">
+        <source src="" type="audio/wav">
+    </audio>
     <div id="container">
         <div id="menu-container">
             <div id="button-container">
@@ -15,6 +18,15 @@
             </div>
             <button id="undo">undo</button>
             <button id="redo">redo</button>
+            <button id="play">play</button>
+            <div>
+                <input type=text id="wavName" value="" placeholder="ファイル名を入力">
+                <button id="downloadWav">download</button>
+            </div>
+            <div>
+                <input type=text id="scoreName" value="" placeholder="ファイル名を入力">
+                <button id="downloadScore">download</button>
+            </div>
         </div>
 
         <div id="container2">

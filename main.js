@@ -25,6 +25,65 @@ function start(){
     menu = new Menu();
 }
 
+
+class Util {
+    constructor() {
+    }
+
+    downloadScore(score) {
+        const url = document.createElement("a");
+        url.download = document.getElementById('scoreName').value || 'score';
+        url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
+        url.click();
+    }
+
+    //https://qiita.com/HirokiTanaka/items/56f80844f9a32020ee3b (10/13)
+    //http://www.ys-labo.com/pc/2009/091223%20File.html (10/13)
+    createWav(audioData) { 
+        const buf = new ArrayBuffer(44 + audioData.length);
+        const view = new DataView(buf);
+
+        const writeString = (offset, string) => {
+            for(let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        //ヘッダ情報の書き込み
+        //44100Hz, 8bit
+        writeString(0, 'RIFF'); //RIFFヘッダ
+        view.setUint32(4, 32+audioData.length, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, 44100, true);
+        view.setUint32(28, 44100, true);
+        view.setUint16(32, 1, true);
+        view.setUint16(34, 8, true);
+        writeString(36, 'data');
+        view.setUint32(40, audioData.length, true);
+        
+        for(let i = 0, offset = 44; i < audioData.length; i++, offset++) {
+            view.setUint8(offset, audioData[i], true);
+        }
+
+        return buf;
+    }
+
+    downloadWav(audioData) {
+        const wav = this.createWav(audioData);
+        const url = document.createElement("a");
+        url.download = document.getElementById('wavName').value || 'audio';
+        url.href = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
+        url.click();
+
+        //音声再生のテスト用
+        document.getElementById('testAudio').src = url.href;
+    }
+}
+
 //Menuバーのイベントから他のクラスに処理を促すクラス
 class Menu {
     constructor() {
@@ -37,7 +96,24 @@ class Menu {
         this.button = new Button();
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
         this.piano = new Piano(this.verticalNum);
+        this.util = new Util();
         this.bar = new Bar(this.verticalNum);
+      
+        document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
+        document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
+        document.getElementById('play').onclick = () => {
+            document.getElementById('testAudio').play();
+        }
+        document.getElementById('downloadWav').onclick = () => {
+            let audioData = [];
+            for(var i = 0; i < 44100*2; i++){
+                audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
+            }
+            this.util.downloadWav(audioData);
+        }
+        document.getElementById('downloadScore').onclick = () => {
+            this.util.downloadScore(this.editor.getScore());
+        }
 
     }
 }
@@ -122,9 +198,6 @@ class Bar {
     draw() {
         this.ctx.strokeStyle = "black";
         this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight * 1 / 2);
-
-        document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
-        document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
     }
 }
 
@@ -146,12 +219,8 @@ class Piano {
         const pianoCellHeight = this.areaHeight / this.verticalNum;
 
         for(let h = 0; h <= this.areaHeight; h += pianoCellHeight){
+            this.ctx.strokeStyle = "gray";
 
-//            if(h / pianoCellHeight % 12 == 0 || h / pianoCellHeight % 12 == 7) {
-//                this.ctx.strokeStyle = "black";
-//            } else {
-                  this.ctx.strokeStyle = "gray";
-//            }
 
             this.ctx.beginPath();
             this.ctx.moveTo(0, h);
@@ -200,6 +269,10 @@ class Editor {
     draw() {
         this.backGround.draw(this.ctx);
         this.score.draw(this.ctx);
+    }
+
+    getScore() {
+        return this.score.score;
     }
 }
 
@@ -277,10 +350,10 @@ class Score {
             lyric: "あ",
             pitch: null
         };
-        
+
         this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-        this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-        this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+        window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+        window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
         this.draw();
     }
 
@@ -465,7 +538,7 @@ class Score {
 
     onMouseUp(e) {
         if(this.isDragging){
-            const rect = e.target.getBoundingClientRect();
+            const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             this.dragProperty.end = Math.max(this.dragProperty.start, Math.floor(x / this.cellWidth));
             this.isDragging = false;
@@ -484,7 +557,7 @@ class Score {
 
     onMouseMove(e) {
         if(this.isDragging){
-            const rect = e.target.getBoundingClientRect();
+            const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             this.dragProperty.end = Math.max(this.dragProperty.start, Math.floor(x / this.cellWidth));
             this.draw();
