@@ -78,9 +78,59 @@ class Util {
         url.download = document.getElementById('wavName').value || 'audio';
         url.href = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
         url.click();
+    }
 
-        //音声再生のテスト用
-        document.getElementById('testAudio').src = url.href;
+    playAudio(audioData) {
+        const wav = this.createWav(audioData);
+        const audio = document.createElement("audio");
+        audio.src = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
+        audio.play();
+    }
+
+    openScore() {
+        const showDialog = () => {
+            return new Promise((resolve, reject) => {
+                const input = document.createElement("input");
+                input.type = 'file';
+                input.accept = '.json, application/json';
+                input.onchange = (e) => {resolve(e.target.files[0]);}
+                input.click();
+            });
+        };
+
+        const readFile = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = () => {
+                    resolve(JSON.parse(reader.result));
+                }
+            });
+        };
+
+        return (async () => {
+            const file = await showDialog();
+            const score = await readFile(file);
+
+            if(!Array.isArray(score)){
+                return new Promise((resolve, reject) => {
+                    reject('this is not a score.');
+                });
+            }
+
+            const property = ['start', 'end', 'lyric', 'pitch'];
+            for(let i = 0; i < score.length; i++) {
+                for(let p of property) {
+                    const has = score[i].hasOwnProperty(p);
+                    if(!has){
+                        return new Promise((resolve, reject) => {
+                            reject('this is not a score.');
+                        });
+                    }
+                }
+            }
+            return score;
+        })();
     }
 }
 
@@ -102,7 +152,11 @@ class Menu {
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
         document.getElementById('play').onclick = () => {
-            document.getElementById('testAudio').play();
+            let audioData = [];
+            for(var i = 0; i < 44100*2; i++){
+                audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
+            }
+            this.util.playAudio(audioData);
         }
         document.getElementById('downloadWav').onclick = () => {
             let audioData = [];
@@ -113,6 +167,13 @@ class Menu {
         }
         document.getElementById('downloadScore').onclick = () => {
             this.util.downloadScore(this.editor.getScore());
+        }
+        document.getElementById('openScore').onclick = () => {
+            this.util.openScore().then((score) => {
+                this.editor.setScore(score);
+            }).catch((e) => {
+                alert(e);
+            });
         }
 
     }
@@ -273,6 +334,11 @@ class Editor {
 
     getScore() {
         return this.score.score;
+    }
+
+    setScore(score) { 
+        this.score.score = score;
+        this.score.draw();
     }
 }
 
