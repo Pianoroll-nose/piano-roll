@@ -6,21 +6,21 @@ function start(){
     document.getElementById('piano').width = pContainer.clientWidth;
 
     //スクロールを合わせる
-    pContainer.onscroll = function(){
-        eContainer.scrollTop = this.scrollTop;
-    };
+    pContainer.addEventListener('scroll', () => {
+        eContainer.scrollTop = pContainer.scrollTop;
+    });
 
-    eContainer.onscroll = function(){
-        pContainer.scrollTop = this.scrollTop;
-    };
+    eContainer.addEventListener('scroll', () => {
+        pContainer.scrollTop = eContainer.scrollTop;
+    });
 
-    bContainer.onscroll = function(){
-        eContainer.scrollLeft = this.scrollLeft;
-    };
+    bContainer.addEventListener('scroll', () => {
+        eContainer.scrollLeft = bContainer.scrollLeft;
+    });
 
-    eContainer.onscroll = function(){
-        bContainer.scrollLeft = this.scrollLeft;
-    };
+    eContainer.addEventListener('scroll', () => {
+        bContainer.scrollLeft = eContainer.scrollLeft;
+    });
 
     menu = new Menu();
 }
@@ -148,18 +148,19 @@ class Menu {
         this.piano = new Piano(this.verticalNum);
         this.util = new Util();
         this.bar = new Bar(this.verticalNum);
-      
+        
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
         document.getElementById('play').onclick = () => {
-            let audioData = [];
+            const audioData = [];
             for(var i = 0; i < 44100*2; i++){
                 audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
             }
             this.util.playAudio(audioData);
         }
+        document.getElementById('clear').onclick = this.editor.clear.bind(this.editor);
         document.getElementById('downloadWav').onclick = () => {
-            let audioData = [];
+            const audioData = [];
             for(var i = 0; i < 44100*2; i++){
                 audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
             }
@@ -213,7 +214,7 @@ class Button {
 
         var x = 0;
 
-        (function animation() {
+        const animation = () => {
             barCtx.clearRect(0, 0, 3000, 40);
             barCtx.strokeStyle = "black";
             barCtx.strokeRect(0, 0, 3000, 20);
@@ -240,8 +241,8 @@ class Button {
             }
 
 
-        })();
-
+        };
+        animation();
     }
 }
 
@@ -299,7 +300,7 @@ class Piano {
             this.ctx.fillRect(0, pianoCellHeight * (8 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
             this.ctx.fillRect(0, pianoCellHeight * (10 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
 
-            this.ctx.fillText("C" + String(o), 170,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
+            this.ctx.fillText("C" + String(o), this.areaWidth * 3 / 4,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
         }
     }
 }
@@ -327,9 +328,13 @@ class Editor {
         this.score.redo();
     }
 
+    clear() {
+        this.score.clear();
+    }
+
     draw() {
-        this.backGround.draw(this.ctx);
-        this.score.draw(this.ctx);
+        this.backGround.draw();
+        this.score.draw();
     }
 
     getScore() {
@@ -337,8 +342,7 @@ class Editor {
     }
 
     setScore(score) { 
-        this.score.score = score;
-        this.score.draw();
+        this.score.setScore(score);
     }
 }
 
@@ -478,6 +482,16 @@ class Score {
             const top = this.scoreStack[this.stackTop];
             Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
         }
+        this.draw();
+    }
+
+    clear() {
+        this.setScore([]);
+    }
+
+    setScore(score) {
+        this.scoreStack.add(0, this.score, score);
+        this.score = score.concat();
         this.draw();
     }
 
