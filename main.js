@@ -143,7 +143,10 @@ class Menu {
         this.verticalNum = 24;
         this.beats = 4;     //何分の何拍子みたいなやつ
 
-        this.button = new Button();
+        this.button1 = document.getElementById("button1");
+        this.button2 = document.getElementById("button2");
+        this.button3 = document.getElementById("button3");
+
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
         this.piano = new Piano(this.verticalNum);
         this.util = new Util();
@@ -177,72 +180,9 @@ class Menu {
             });
         }
 
-    }
-}
-
-class Button {
-    constructor() {
-        this.canvas = document.getElementById("button");
-        this.ctx = this.canvas.getContext("2d");
-        this.areaWidth = this.canvas.clientWidth;
-        this.areaHeight = this.canvas.clientHeight;
-
-        this.canvas.addEventListener('click', this.onClick.bind(this), false);
-        this.draw();
-    }
-
-    draw() {
-        this.ctx.strokeStyle = "black";
-        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.areaWidth / 4, this.areaHeight / 4);
-        this.ctx.lineTo(this.areaWidth * 3 / 4, this.areaHeight / 2);
-        this.ctx.lineTo(this.areaWidth / 4, this.areaHeight * 3 / 4);
-        this.ctx.closePath();
-
-        this.ctx.strokeStyle = "black";
-        this.ctx.stroke();
-
-        this.ctx.fillStyle = "black";
-        this.ctx.fill();
-    }
-
-    onClick(e) {
-        let barCanvas = document.getElementById("bar");
-        let barCtx = barCanvas.getContext("2d");
-
-        var x = 0;
-
-        const animation = () => {
-            barCtx.clearRect(0, 0, 3000, 40);
-            barCtx.strokeStyle = "black";
-            barCtx.strokeRect(0, 0, 3000, 20);
-
-            barCtx.strokeStyle = "green";
-
-            barCtx.beginPath();
-            barCtx.moveTo(x - 15, 0);
-            barCtx.lineTo(x + 15, 0);
-            barCtx.lineTo(x, 19);
-            barCtx.closePath();
-
-            barCtx.strokeStyle = "green";
-            barCtx.stroke();
-
-            barCtx.fillStyle = "green";
-            barCtx.fill();
-
-            if (x > 3000) {
-                x = 0;
-            } else {
-                x += 2;
-                requestAnimationFrame(animation);
-            }
-
-
-        };
-        animation();
+        this.button1.addEventListener("click", this.bar.barStart.bind(this.bar), false);
+        this.button2.addEventListener("click", this.bar.barStop.bind(this.bar), false);
+        this.button3.addEventListener("click", this.bar.barReset.bind(this.bar), false);
     }
 }
 
@@ -255,6 +195,67 @@ class Bar {
 
         this.verticalNum = verticalNum;
         this.draw();
+
+        this.x = 0;
+        this.st = 0;
+    }
+
+    barStart() {
+        this.x = 0;
+        this.st = 0;
+
+        const animation = () => {
+
+            this.ctx.strokeStyle = "green";
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(x - 15, 0);
+            this.ctx.lineTo(x + 15, 0);
+            this.ctx.lineTo(x, 19);
+            this.ctx.closePath();
+
+            this.ctx.strokeStyle = "green";
+            this.ctx.stroke();
+
+            this.ctx.fillStyle = "green";
+            this.ctx.fill();
+
+            if (this.x > 3000) {
+                this.x = 0;
+            } else if (this.st == 1) {
+            } else {
+                this.x += 2;
+                requestAnimationFrame(animation);
+            }
+
+
+        };
+
+    barStop() {
+        this.st = 1;
+    }
+
+    barReset() {
+        this.st = 1;
+        this.x = 0;
+
+        this.ctx.clearRect(0, 0, 3000, 40);
+        this.ctx.strokeStyle = "black";
+        this.ctx.strokeRect(0, 0, 3000, 20);
+
+        this.ctx.strokeStyle = "green";
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.x - 15, 0);
+        this.ctx.lineTo(this.x + 15, 0);
+        this.ctx.lineTo(this.x, 19);
+        this.ctx.closePath();
+
+        this.ctx.strokeStyle = "green";
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = "green";
+        this.ctx.fill();
     }
 
     draw() {
