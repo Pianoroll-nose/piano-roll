@@ -199,12 +199,10 @@ class Bar {
     constructor(verticalNum) {
         this.canvas = document.getElementById("bar");
         this.ctx = this.canvas.getContext("2d");
-        this.areaWidth = this.canvas.clientWidth;
-        this.areaHeight = this.canvas.clientHeight;
-
         this.verticalNum = verticalNum;
-        this.draw();
+        this.resize();
 
+        //stという変数がストップしている状態を表すフラグなのであればisStoppedなどにしてboolean型にした方が良いのでは
         this.x = 0;
         this.st = 0;
     }
@@ -214,17 +212,18 @@ class Bar {
         this.st = 0;
 
         const animation = () => {
-
-            this.ctx.strokeStyle = "green";
+            this.ctx.clearRect(0, 0, this.areaWidth, 40);
+            this.drawFrame();
+            //this.ctx.strokeStyle = "green";
 
             this.ctx.beginPath();
-            this.ctx.moveTo(x - 15, 0);
-            this.ctx.lineTo(x + 15, 0);
-            this.ctx.lineTo(x, 19);
+            this.ctx.moveTo(this.x - 15, 0);
+            this.ctx.lineTo(this.x + 15, 0);
+            this.ctx.lineTo(this.x, 19);
             this.ctx.closePath();
 
-            this.ctx.strokeStyle = "green";
-            this.ctx.stroke();
+            //this.ctx.strokeStyle = "green";
+            //this.ctx.stroke();
 
             this.ctx.fillStyle = "green";
             this.ctx.fill();
@@ -237,8 +236,9 @@ class Bar {
                 requestAnimationFrame(animation);
             }
 
-
         };
+        animation();
+    }
 
     barStop() {
         this.st = 1;
@@ -248,11 +248,11 @@ class Bar {
         this.st = 1;
         this.x = 0;
 
-        this.ctx.clearRect(0, 0, 3000, 40);
+        this.ctx.clearRect(0, 0, this.areaWidth, 40);
         this.ctx.strokeStyle = "black";
-        this.ctx.strokeRect(0, 0, 3000, 20);
+        this.ctx.strokeRect(0, 0, this.areaWidth, 20);
 
-        this.ctx.strokeStyle = "green";
+        //this.ctx.strokeStyle = "green";
 
         this.ctx.beginPath();
         this.ctx.moveTo(this.x - 15, 0);
@@ -260,8 +260,8 @@ class Bar {
         this.ctx.lineTo(this.x, 19);
         this.ctx.closePath();
 
-        this.ctx.strokeStyle = "green";
-        this.ctx.stroke();
+        //this.ctx.strokeStyle = "green";
+        //this.ctx.stroke();
 
         this.ctx.fillStyle = "green";
         this.ctx.fill();
@@ -270,12 +270,13 @@ class Bar {
     resize() {
         this.areaWidth = this.canvas.clientWidth;
         this.areaHeight = this.canvas.clientHeight;
-        this.draw();
+        this.drawFrame();
+        this.barReset();
     }
     
-    draw() {
+    drawFrame() {
         this.ctx.strokeStyle = "black";
-        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight * 1 / 2);
+        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight / 2);
     }
 }
 
