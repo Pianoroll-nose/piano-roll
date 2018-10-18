@@ -128,6 +128,8 @@ class Bar {
         this.ctx.strokeStyle = "black";
         this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight * 1 / 2);
 
+        document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
+        document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
     }
 }
 
@@ -192,6 +194,14 @@ class Editor {
         this.draw();
     }
 
+    undo() {
+        this.score.undo();
+    }
+    
+    redo() { 
+        this.score.redo();
+    }
+
     draw() {
         this.backGround.draw(this.ctx);
         this.score.draw(this.ctx);
@@ -251,6 +261,19 @@ class Score {
         this.cellHeight = this.areaHeight / this.verticalNum;
 
         this.score = new Array();
+        this.scoreStack = new Array();
+        this.scoreStack.push(null);
+        this.scoreStack.add = (index, removed, added) => { 
+            this.scoreStack.splice(this.stackTop+1, this.score.length-this.stackTop+1);
+            this.scoreStack.push({
+                index: index,
+                removed: removed,
+                added: added
+            });
+            this.stackTop = this.scoreStack.length-1;    
+        }
+        this.stackTop = 0;
+
         this.isClicked = false;
         this.isDragging = false;
         this.dragProperty = {
@@ -259,7 +282,7 @@ class Score {
             lyric: "あ",
             pitch: null
         };
-
+        
         this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
         this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this), false);
         this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this), false);
@@ -306,6 +329,24 @@ class Score {
         return -1;
     }
 
+    undo() {
+        const top = this.scoreStack[this.stackTop];
+        if(top !== null){
+            Array.prototype.splice.apply(this.score, [top.index, top.added.length].concat(top.removed));
+            this.stackTop--;
+        }
+        this.draw();
+    }
+
+    redo() {
+        if(this.stackTop+1 < this.scoreStack.length){
+            this.stackTop++;
+            const top = this.scoreStack[this.stackTop];
+            Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
+        }
+        this.draw();
+    }
+
     addNote(obj) {
         let shouldDelete = true, objList = [obj];
 
@@ -350,7 +391,8 @@ class Score {
 
         let deleteNum = shouldDelete ? i_e-i_s+1 : 0;
 
-        this.score.splice.apply(this.score, [i_s, deleteNum].concat(objList));
+        const removed = Array.prototype.splice.apply(this.score, [i_s, deleteNum].concat(objList));
+        this.scoreStack.add(i_s, removed, objList);
     }
 
     addTextBox(index) {
@@ -373,8 +415,10 @@ class Score {
         };
         input.onkeypress = function(e) {
             if(e.keyCode === 13){
-                let txtBox = document.getElementById("lyric");
-                this.score[index].lyric = txtBox.value;
+                const txtBox = document.getElementById("lyric");
+                const add = Object.assign({}, this.score[index]);
+                add.lyric = txtBox.value;
+                this.addNote(add);
                 txtBox.blur();
                 this.draw();
             }
@@ -407,7 +451,7 @@ class Score {
                 this.isClicked = true;
                 setTimeout(function() {
                     if(this.isClicked){
-                        this.score.splice(sameIndex, 1);
+                        this.scoreStack.add(sameIndex, this.score.splice(sameIndex, 1), []);
                     }
                     this.isClicked = false;
                     this.draw();
