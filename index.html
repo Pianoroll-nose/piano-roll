@@ -10,6 +10,7 @@
 <body onload="start()">
     <div id="container">
         <div id="menu-container">
+            <audio id="audio"></audio>
             <input type="button" id="button1" value="再生">
             <input type="button" id="button2" value="一時停止">
             <input type="button" id="button3" value="停止">
@@ -26,8 +27,14 @@
                 <button id="downloadScore">download</button>
             </div>
             <button id="openScore">open</button>
-            <button id="width+">+</button>
-            <button id="width-">-</button>
+            <div>
+                <button id="w-up" class="zoom">+</button>
+                <button id="w-down" class="zoom">-</button>    
+            </div>
+            <div>
+                <button id="h-up" class="zoom">+</button>
+                <button id="h-down" class="zoom">-</button>    
+            </div>
         </div>
 
         <div id="container2">

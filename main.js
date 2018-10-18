@@ -78,13 +78,19 @@ class Util {
         url.download = document.getElementById('wavName').value || 'audio';
         url.href = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
         url.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(url.href);
+        }, 0);
     }
 
     playAudio(audioData) {
         const wav = this.createWav(audioData);
-        const audio = document.createElement("audio");
+        const audio = document.getElementById("audio");
         audio.src = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
         audio.play();
+        setTimeout(() => {
+            URL.revokeObjectURL(audio.src);
+        }, 0);
     }
 
     openScore() {
@@ -180,15 +186,33 @@ class Menu {
             });
         }
 
-        document.getElementById('width+').onclick = () => {
-            const elements = document.querySelectorAll('canvas:not(#piano)');
-            elements.forEach((element, index) => {
-                console.log(element);
-                element.width += 100;
-            })
-            this.editor.resize();
-            this.bar.resize();
-        };
+        //ToDo:もう少し綺麗に記述できそう
+        document.querySelectorAll('.zoom').forEach((button, index) => {
+            const id = button.id;
+            const addOrSub = (id, value) => (id.endsWith('up')) ? value+100 : value-100;
+            if(id.startsWith('w')) {
+                button.onclick = () => {
+                    const elements = document.querySelectorAll('canvas:not(#piano)');
+                    elements.forEach((element, index) => {
+                        //2000px以上6000px以下
+                        element.width = Math.max(2000, Math.min(6000, addOrSub(id, element.width)));
+                    })
+                    this.editor.resize();
+                    this.bar.resize();    
+                }
+            }
+            else {
+                button.onclick = () => {
+                    const elements = document.querySelectorAll('canvas:not(#bar)');
+                    elements.forEach((element, index) => {
+                        //500px以上3000px以下
+                        element.height = Math.max(500, Math.min(3000, addOrSub(id, element.height)));
+                    })
+                    this.editor.resize();
+                    this.piano.resize();    
+                }
+            }
+        });
         this.button1.addEventListener("click", this.bar.barStart.bind(this.bar), false);
         this.button2.addEventListener("click", this.bar.barStop.bind(this.bar), false);
         this.button3.addEventListener("click", this.bar.barReset.bind(this.bar), false);
@@ -295,6 +319,8 @@ class Piano {
     }
 
     draw() {
+        this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
+
         this.ctx.strokeStyle = "black";
         this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight);
 
@@ -582,7 +608,7 @@ class Score {
         input.id = "lyric";
         input.value = this.score[index].lyric;
         input.style.position = "absolute";
-        input.style.fontSize = this.cellHeight + "px";
+        input.style.fontSize = Math.min(this.cellHeight, this.cellWidth) + "px";
         input.style.top = this.score[index].pitch * this.cellHeight + "px";
         input.style.left = this.score[index].start * this.cellWidth + "px";
         input.style.width = this.cellWidth * (this.score[index].end - this.score[index].start + 1) + "px";
