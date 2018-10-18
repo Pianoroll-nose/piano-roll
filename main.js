@@ -180,6 +180,15 @@ class Menu {
             });
         }
 
+        document.getElementById('width+').onclick = () => {
+            const elements = document.querySelectorAll('canvas:not(#piano)');
+            elements.forEach((element, index) => {
+                console.log(element);
+                element.width += 100;
+            })
+            this.editor.resize();
+            this.bar.resize();
+        };
         this.button1.addEventListener("click", this.bar.barStart.bind(this.bar), false);
         this.button2.addEventListener("click", this.bar.barStop.bind(this.bar), false);
         this.button3.addEventListener("click", this.bar.barReset.bind(this.bar), false);
@@ -258,6 +267,12 @@ class Bar {
         this.ctx.fill();
     }
 
+    resize() {
+        this.areaWidth = this.canvas.clientWidth;
+        this.areaHeight = this.canvas.clientHeight;
+        this.draw();
+    }
+    
     draw() {
         this.ctx.strokeStyle = "black";
         this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight * 1 / 2);
@@ -268,10 +283,13 @@ class Piano {
     constructor(verticalNum) {
         this.canvas = document.getElementById("piano");
         this.ctx = this.canvas.getContext("2d");
+        this.verticalNum = verticalNum;
+        this.resize();
+    }
+
+    resize() {
         this.areaWidth = this.canvas.clientWidth;
         this.areaHeight = this.canvas.clientHeight;
-
-        this.verticalNum = verticalNum;
         this.draw();
     }
 
@@ -321,6 +339,11 @@ class Editor {
         this.draw();
     }
 
+    resize() {
+        this.score.resize();
+        this.backGround.resize();
+    }
+
     undo() {
         this.score.undo();
     }
@@ -352,15 +375,19 @@ class BackGround {
     constructor(measureNum, vNum, beats) {
         this.canvas = document.getElementById("background");
         this.ctx = this.canvas.getContext("2d");
-        this.areaWidth = this.canvas.clientWidth;
-        this.areaHeight = this.canvas.clientHeight;
         this.measureNum = measureNum;
         this.verticalNum = vNum;
         this.beats = beats;
 
-        this.draw();
+        this.resize();
     }
 
+    resize() {
+        this.areaWidth = this.canvas.clientWidth;
+        this.areaHeight = this.canvas.clientHeight;
+        this.draw();
+    }
+    
     draw() {
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
 
@@ -394,10 +421,6 @@ class Score {
         this.ctx = this.canvas.getContext("2d");
         this.horizontalNum = horizontalNum;
         this.verticalNum = verticalNum;
-        this.areaWidth = this.canvas.clientWidth;
-        this.areaHeight = this.canvas.clientHeight;
-        this.cellWidth = this.areaWidth / this.horizontalNum;
-        this.cellHeight = this.areaHeight / this.verticalNum;
 
         this.score = new Array();
         this.scoreStack = new Array();
@@ -425,7 +448,7 @@ class Score {
         this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
         window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
         window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-        this.draw();
+        this.resize();
     }
 
     draw() {
@@ -483,6 +506,14 @@ class Score {
             const top = this.scoreStack[this.stackTop];
             Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
         }
+        this.draw();
+    }
+
+    resize() {
+        this.areaWidth = this.canvas.clientWidth;
+        this.areaHeight = this.canvas.clientHeight;
+        this.cellWidth = this.areaWidth / this.horizontalNum;
+        this.cellHeight = this.areaHeight / this.verticalNum;
         this.draw();
     }
 
