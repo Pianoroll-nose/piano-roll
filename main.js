@@ -6,21 +6,21 @@ function start(){
     document.getElementById('piano').width = pContainer.clientWidth;
 
     //スクロールを合わせる
-    pContainer.onscroll = function(){
-        eContainer.scrollTop = this.scrollTop;
-    };
+    pContainer.addEventListener('scroll', () => {
+        eContainer.scrollTop = pContainer.scrollTop;
+    });
 
-    eContainer.onscroll = function(){
-        pContainer.scrollTop = this.scrollTop;
-    };
+    eContainer.addEventListener('scroll', () => {
+        pContainer.scrollTop = eContainer.scrollTop;
+    });
 
-    bContainer.onscroll = function(){
-        eContainer.scrollLeft = this.scrollLeft;
-    };
+    bContainer.addEventListener('scroll', () => {
+        eContainer.scrollLeft = bContainer.scrollLeft;
+    });
 
-    eContainer.onscroll = function(){
-        bContainer.scrollLeft = this.scrollLeft;
-    };
+    eContainer.addEventListener('scroll', () => {
+        bContainer.scrollLeft = eContainer.scrollLeft;
+    });
 
     menu = new Menu();
 }
@@ -78,9 +78,59 @@ class Util {
         url.download = document.getElementById('wavName').value || 'audio';
         url.href = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
         url.click();
+    }
 
-        //音声再生のテスト用
-        document.getElementById('testAudio').src = url.href;
+    playAudio(audioData) {
+        const wav = this.createWav(audioData);
+        const audio = document.createElement("audio");
+        audio.src = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
+        audio.play();
+    }
+
+    openScore() {
+        const showDialog = () => {
+            return new Promise((resolve, reject) => {
+                const input = document.createElement("input");
+                input.type = 'file';
+                input.accept = '.json, application/json';
+                input.onchange = (e) => {resolve(e.target.files[0]);}
+                input.click();
+            });
+        };
+
+        const readFile = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = () => {
+                    resolve(JSON.parse(reader.result));
+                }
+            });
+        };
+
+        return (async () => {
+            const file = await showDialog();
+            const score = await readFile(file);
+
+            if(!Array.isArray(score)){
+                return new Promise((resolve, reject) => {
+                    reject('this is not a score.');
+                });
+            }
+
+            const property = ['start', 'end', 'lyric', 'pitch'];
+            for(let i = 0; i < score.length; i++) {
+                for(let p of property) {
+                    const has = score[i].hasOwnProperty(p);
+                    if(!has){
+                        return new Promise((resolve, reject) => {
+                            reject('this is not a score.');
+                        });
+                    }
+                }
+            }
+            return score;
+        })();
     }
 }
 
@@ -101,14 +151,19 @@ class Menu {
         this.piano = new Piano(this.verticalNum);
         this.util = new Util();
         this.bar = new Bar(this.verticalNum);
-      
+        
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
         document.getElementById('play').onclick = () => {
-            document.getElementById('testAudio').play();
+            const audioData = [];
+            for(var i = 0; i < 44100*2; i++){
+                audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
+            }
+            this.util.playAudio(audioData);
         }
+        document.getElementById('clear').onclick = this.editor.clear.bind(this.editor);
         document.getElementById('downloadWav').onclick = () => {
-            let audioData = [];
+            const audioData = [];
             for(var i = 0; i < 44100*2; i++){
                 audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
             }
@@ -116,6 +171,13 @@ class Menu {
         }
         document.getElementById('downloadScore').onclick = () => {
             this.util.downloadScore(this.editor.getScore());
+        }
+        document.getElementById('openScore').onclick = () => {
+            this.util.openScore().then((score) => {
+                this.editor.setScore(score);
+            }).catch((e) => {
+                alert(e);
+            });
         }
 
         this.button1.addEventListener("click", this.bar.barStart.bind(this.bar), false);
@@ -143,9 +205,6 @@ class Bar {
         this.st = 0;
 
         const animation = () => {
-            this.ctx.clearRect(0, 0, 3000, 40);
-            this.ctx.strokeStyle = "black";
-            this.ctx.strokeRect(0, 0, 3000, 20);
 
             this.ctx.strokeStyle = "green";
 
@@ -171,7 +230,6 @@ class Bar {
 
 
         };
-    }
 
     barStop() {
         this.st = 1;
@@ -243,7 +301,7 @@ class Piano {
             this.ctx.fillRect(0, pianoCellHeight * (8 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
             this.ctx.fillRect(0, pianoCellHeight * (10 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
 
-            this.ctx.fillText("C" + String(o), 170,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
+            this.ctx.fillText("C" + String(o), this.areaWidth * 3 / 4,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
         }
     }
 }
@@ -271,13 +329,21 @@ class Editor {
         this.score.redo();
     }
 
+    clear() {
+        this.score.clear();
+    }
+
     draw() {
-        this.backGround.draw(this.ctx);
-        this.score.draw(this.ctx);
+        this.backGround.draw();
+        this.score.draw();
     }
 
     getScore() {
         return this.score.score;
+    }
+
+    setScore(score) { 
+        this.score.setScore(score);
     }
 }
 
@@ -417,6 +483,16 @@ class Score {
             const top = this.scoreStack[this.stackTop];
             Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
         }
+        this.draw();
+    }
+
+    clear() {
+        this.setScore([]);
+    }
+
+    setScore(score) {
+        this.scoreStack.add(0, this.score, score);
+        this.score = score.concat();
         this.draw();
     }
 
