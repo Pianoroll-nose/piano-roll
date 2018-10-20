@@ -23,6 +23,20 @@ function start(){
     });
 
     menu = new Menu();
+
+    //画面のリサイズ処理の登録
+    (function(){
+        let timeout;
+        window.onresize = () => {
+            clearTimeout(timeout);
+
+            timeout = setTimeout(() => {
+                document.getElementById('piano').width = pContainer.clientWidth;
+                menu.resize();
+            }, 100);
+        }
+    })();
+
 }
 
 
@@ -216,6 +230,12 @@ class Menu {
         this.button1.addEventListener("click", this.bar.barStart.bind(this.bar), false);
         this.button2.addEventListener("click", this.bar.barStop.bind(this.bar), false);
         this.button3.addEventListener("click", this.bar.barReset.bind(this.bar), false);
+    }
+
+    resize() {
+        this.editor.resize();
+        this.piano.resize();
+        this.bar.resize();
     }
 }
 
@@ -422,12 +442,12 @@ class BackGround {
         const cellHeight = this.areaHeight / this.verticalNum;
         this.ctx.strokeStyle = "black";
 
-        for(let w = 0; w <= this.areaWidth; w += cellWidth){
-            this.ctx.lineWidth = (w % (cellWidth*this.beats) === 0) ? 4 : 1;
+        for(let i = 0; i < this.measureNum; i++){
+            this.ctx.lineWidth = (i % this.beats == 0) ? 4 : 1;
 
             this.ctx.beginPath();
-            this.ctx.moveTo(w, 0);
-            this.ctx.lineTo(w, this.areaHeight);
+            this.ctx.moveTo(cellWidth*i, 0);
+            this.ctx.lineTo(cellWidth*i, this.areaHeight);
             this.ctx.stroke();
         }
 
