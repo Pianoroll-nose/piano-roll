@@ -6,6 +6,7 @@ class Menu {
         this.measureNum = 30;
         this.horizontalNum = this.measureNum * this.notesPerMeasure;
         this.verticalNum = 24;
+        this.basePitch = 'C0';
         this.beats = 4;     //何分の何拍子みたいなやつ
 
         this.button1 = document.getElementById("button1");
@@ -14,7 +15,7 @@ class Menu {
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
         this.piano = new Piano(this.verticalNum);
-        this.util = new Util();
+        this.util = new Util(this.basePitch, this.verticalNum);
         this.bar = new Bar(this.verticalNum);
         
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);

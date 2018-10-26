@@ -53,7 +53,7 @@ class Score {
             let width = (obj.end - obj.start + 1) * this.cellWidth;
 
             //四角の描画
-            this.ctx.fillStyle = "red";
+            this.ctx.fillStyle = obj === this.dragProperty ? "rgba(255, 0, 0, 0.4)" : "red";
             this.ctx.fillRect(left, top, width, this.cellHeight);
             this.ctx.strokeRect(left, top, width, this.cellHeight);
 
@@ -240,7 +240,6 @@ class Score {
             this.isDragging = false;
 
             this.addNote(this.dragProperty);
-            this.draw();
 
             this.dragProperty = {
                 start: null,
@@ -248,6 +247,7 @@ class Score {
                 lyric: "あ",
                 pitch: null
             };
+            this.draw();
         }
     }
 
