@@ -3,7 +3,18 @@ class Util {
         this.musicXML = new MusicXML(basePitch, verticalNum);
     }
 
-    downloadScore(score) {
+    downloadScore(score, notesPerMeasure, beats) {
+        const xml = this.musicXML.create(score, notesPerMeasure, beats);
+
+        const url = document.createElement("a");
+        url.download = document.getElementById('scoreName').value || 'score';
+        url.href = URL.createObjectURL(new Blob([xml], {'type': 'application/xml'}));
+        url.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(url.href);
+        }, 0);
+
+        /*
         const url = document.createElement("a");
         url.download = document.getElementById('scoreName').value || 'score';
         url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
@@ -11,6 +22,7 @@ class Util {
         setTimeout(() => {
             URL.revokeObjectURL(url.href);
         }, 0);
+        */
     }
 
     //https://qiita.com/HirokiTanaka/items/56f80844f9a32020ee3b (10/13)

@@ -6,15 +6,15 @@ class Menu {
         this.measureNum = 30;
         this.horizontalNum = this.measureNum * this.notesPerMeasure;
         this.verticalNum = 24;
-        this.basePitch = 'C0';
-        this.beats = 4;     //何分の何拍子みたいなやつ
+        this.basePitch = 'C4';
+        this.beats = 4;     //1小節に何拍あるか
 
         this.button1 = document.getElementById("button1");
         this.button2 = document.getElementById("button2");
         this.button3 = document.getElementById("button3");
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
-        this.piano = new Piano(this.verticalNum);
+        this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
         this.bar = new Bar(this.verticalNum);
         
@@ -36,7 +36,7 @@ class Menu {
             this.util.downloadWav(audioData);
         }
         document.getElementById('downloadScore').onclick = () => {
-            this.util.downloadScore(this.editor.getScore());
+            this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
         }
         document.getElementById('openScore').onclick = () => {
             this.util.openScore().then((score) => {
