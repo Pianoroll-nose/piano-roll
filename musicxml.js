@@ -149,9 +149,9 @@ class MusicXML {
                     }
                     if(i !== startMeasure) {
                         const tie = dom.createElement('tie');
-                        tie.setAttribute('type', 'stop');
+                        tie.setAttribute('type', 'end');
                         const tied = dom.createElement('tied');
-                        tied.setAttribute('type', 'stop');
+                        tied.setAttribute('type', 'end');
                         note.appendChild(tie);
                         notations.appendChild(tied);
                     }
@@ -284,7 +284,6 @@ class MusicXML {
                             score.push(tmp);
                             tmp = {};
                         }
-                        console.log(note);
                     }
                     else    score.push(note);
                 }
