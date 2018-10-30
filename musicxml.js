@@ -113,13 +113,13 @@ class MusicXML {
                 const octave = dom.createElement('octave');
                 octave.textContent = pitch_strings[1];
                 pitch.appendChild(step);
-                pitch.appendChild(octave);
                 if(pitch_strings[2] !== null) {
                     const alter = dom.createElement('alter');
                     alter.textContent = 1;
                     pitch.appendChild(alter);
                 }
-    
+                pitch.appendChild(octave);
+
                 const duration = dom.createElement('duration');
                 duration.textContent = Math.min(s.end, i*noteNum-1) - start + 1;
                 start = s.end > i*noteNum-1 ? i*noteNum : s.end;
@@ -149,9 +149,9 @@ class MusicXML {
                     }
                     if(i !== startMeasure) {
                         const tie = dom.createElement('tie');
-                        tie.setAttribute('type', 'end');
+                        tie.setAttribute('type', 'stop');
                         const tied = dom.createElement('tied');
-                        tied.setAttribute('type', 'end');
+                        tied.setAttribute('type', 'stop');
                         note.appendChild(tie);
                         notations.appendChild(tied);
                     }
