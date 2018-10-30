@@ -1,7 +1,7 @@
 class MusicXML {
     constructor(basePitch, verticalNum) {
         this.basePitch = basePitch.match(/[A-G]?/)[0];
-        this.baseOctave = basePitch.match(/\d/)[0];
+        this.baseOctave = parseInt(basePitch.match(/\d/)[0], 10);
         this.verticalNum = verticalNum;
     }
 
@@ -27,8 +27,8 @@ class MusicXML {
 
         const part = dom.createElement('part');
         part.setAttribute('id', 'P1');
-        const _measure = dom.createElement('measure');
-        _measure.setAttribute('number', 1);
+        let measure = dom.createElement('measure');
+        measure.setAttribute('number', 1);
         const attributes = dom.createElement('attributes');
         const divisions = dom.createElement('divisions');
         divisions.textContent = notesPerMeasure;
@@ -47,8 +47,8 @@ class MusicXML {
         line.textContent = '2';
 
         score_partwise.appendChild(part);
-        part.appendChild(_measure);
-        _measure.appendChild(attributes);
+        part.appendChild(measure);
+        measure.appendChild(attributes);
 
         attributes.appendChild(divisions);
         attributes.appendChild(key);
@@ -62,22 +62,125 @@ class MusicXML {
         
         let currentTime = 0;
         let currentMeasure = 1;
-        let beforeTime = 0;
+
         for(let s of score) {
             if(currentTime > currentMeasure*noteNum){
                 currentMeasure++;
-                const measure = dom.createElement('measure');
+                measure = dom.createElement('measure');
                 measure.setAttribute('number', currentMeasure);
                 part.appendChild(measure);
             }
             
-            const note = dom.createElement('note');
-            if(s.start - beforeTime > 0) {
-                const note = dom.createElement('note');
-                const rest = dom.createElement('rest');
-                const duration = dom.createElement('duration');
-                duration.textContent = s.start - beforeTime;
+            //restの挿入
+            if(s.start - currentTime > 0) {
+                let tmp = {
+                    start: currentTime,
+                    end: s.start - 1,
+                };
+
+                const startMeasure = Math.floor(currentTime / noteNum) + 1;
+                const endMeasure = Math.floor((s.start-1) / noteNum) + 1;
+                for(let i = startMeasure; i <= endMeasure; i++) {
+                    const note = dom.createElement('note');
+                    const rest = dom.createElement('rest');
+                    const duration = dom.createElement('duration');
+                    duration.textContent = Math.min(tmp.end, i*noteNum-1) - tmp.start + 1;
+
+                    tmp.start = tmp.end > i*noteNum-1 ? i*noteNum : tmp.start;
+
+                    note.appendChild(rest);
+                    note.appendChild(duration);
+
+                    //measureが変わる時
+                    if(startMeasure !== endMeasure && i !== startMeasure) {
+                        measure = dom.createElement('measure');
+                        measure.setAttribute('number', ''+i);
+                        part.appendChild(measure);
+                    }
+                    measure.appendChild(note);
+                }
             }
+
+            const startMeasure = Math.floor(s.start / noteNum) + 1;
+            const endMeasure = Math.floor(s.end / noteNum) + 1;
+            const pitch_strings = this.numToPitch(s.pitch);
+            let start = s.start;
+            for(let i = startMeasure; i <= endMeasure; i++) {
+                const note = dom.createElement('note');
+                const pitch = dom.createElement('pitch');
+                const step = dom.createElement('step');
+                step.textContent = pitch_strings[0];
+                const octave = dom.createElement('octave');
+                octave.textContent = pitch_strings[1];
+                pitch.appendChild(step);
+                pitch.appendChild(octave);
+                if(pitch_strings[2] !== null) {
+                    const alter = dom.createElement('alter');
+                    alter.textContent = 1;
+                    pitch.appendChild(alter);
+                }
+    
+                const duration = dom.createElement('duration');
+                duration.textContent = Math.min(s.end, i*noteNum-1) - start + 1;
+                start = s.end > i*noteNum-1 ? i*noteNum : s.end;
+                note.appendChild(pitch);
+                note.appendChild(duration);
+
+                const lyric = dom.createElement('lyric');
+                const syllabic = dom.createElement('syllabic');
+                const text = dom.createElement('text');
+
+                //tieの時
+                if(startMeasure !== endMeasure) {
+                    if(i > startMeasure){
+                        measure = dom.createElement('measure');
+                        measure.setAttribute('number', i+'');
+                        part.appendChild(measure);                            
+                    } 
+
+                    const notations = dom.createElement('notations');
+                    if(i !== endMeasure){
+                        const tie = dom.createElement('tie');
+                        tie.setAttribute('type', 'start');
+                        const tied = dom.createElement('tied');
+                        tied.setAttribute('type', 'start');
+                        note.appendChild(tie);
+                        notations.appendChild(tied);
+                    }
+                    if(i !== startMeasure) {
+                        const tie = dom.createElement('tie');
+                        tie.setAttribute('type', 'end');
+                        const tied = dom.createElement('tied');
+                        tied.setAttribute('type', 'end');
+                        note.appendChild(tie);
+                        notations.appendChild(tied);
+                    }
+                    note.appendChild(notations);
+                }
+
+                //どうにかできそう
+                if(startMeasure === endMeasure) {
+                    syllabic.textContent = 'single';
+                    text.textContent = s.lyric;
+                }
+                else if(i === startMeasure) {
+                    syllabic.textContent = 'begin';    
+                    text.textContent = s.lyric;                
+                }
+                else if(i === endMeasure) {
+                    syllabic.textContent = 'end';
+                }
+                else {
+                    syllabic.textContent = 'middle';
+                }
+                
+                lyric.appendChild(syllabic);
+                lyric.appendChild(text);
+
+                note.appendChild(lyric);
+                measure.appendChild(note);    
+            }
+            currentTime = s.end + 1;
         }
 
         const serializer = new XMLSerializer();
@@ -86,23 +189,25 @@ class MusicXML {
 
     }
 
-    getNoteType(duration, notesPerMeasure) {
+    numToPitch(num) {
+        const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+        const pitch = pitchList[(this.verticalNum - num - 1) % 12];
+        const octave = this.baseOctave + Math.floor((this.verticalNum - num - 1) / 12);
+        const alter = pitch.match(/\+/) || [null];
 
+        return [pitch[0], octave, alter[0]]
     }
 
-    addNote(note, isThai){
-
-    }
-
-    pitchToNum(p, acc) {
+    pitchToNum(p, acc, alter) {
         const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
         const sharpOrFlat = {'sharp': 1, 'flat': -1};
         const pitch = p.match(/[A-G]?/)[0];
         const octave = p.match(/\d/)[0];
 
-        const pitchOffset = (pitchList.indexOf(pitch) - pitchList.indexOf(this.basePitch) + 12) % 12;
+        //pitchOffsetの計算が怪しい
+        const pitchOffset = (pitchList.indexOf(pitch) - pitchList.indexOf(this.basePitch - 1) + 12) % 12;
         const octaveOffset = (octave - this.baseOctave) * 12;
-        const accidental = sharpOrFlat[acc] || 0;
+        const accidental = (sharpOrFlat[acc] || 0) + alter;
 
         //scoreの方は上からpitchが上からなので変換
         return this.verticalNum - (pitchOffset + octaveOffset + accidental);
@@ -121,7 +226,7 @@ class MusicXML {
         }
 
         //xmlの中身の取得
-        const partID = dom.querySelector('score-part').id;
+        const partID = dom.querySelector('score-part').getAttribute('id');
         const part = dom.querySelector('part#'+partID);
         const measures = part.querySelectorAll('measure');
         const attribute = part.querySelector('attributes');
@@ -151,26 +256,35 @@ class MusicXML {
                     const step = n.querySelector('pitch step');
                     const octave = n.querySelector('pitch octave');
                     const accidental = n.querySelector('accidental');
+                    const alter = n.querySelector('alter');
                     note.pitch = this.pitchToNum(
                         step.textContent + octave.textContent,
-                        accidental !== null ? accidental.textContent : null
+                        accidental !== null ? accidental.textContent : null,
+                        alter !== null ? parseInt(alter.textContent, 10) : 0
                     );
                 }
+
                 if(n.querySelector('lyric') !== null) {
                     note.lyric = n.querySelector('lyric text').textContent;
                 }
 
                 if(n.querySelector('rest') === null) {
                     if(n.querySelector('tie') !== null) {
-                        const tie = n.querySelector('tie');
-                        if(tie.getAttribute('type') === 'start') {
+                        const ties = n.querySelectorAll('tie');
+                        const tie_type = Array.prototype.map.call(ties, (t) => {
+                            return t.getAttribute('type');
+                        });
+                        const isStart = tie_type.includes('start');
+                        const isStop = tie_type.includes('end');
+                        if(isStart && !isStop) {
                             tmp = note;
                         }
-                        else {
+                        else if(!isStart && isStop) {
                             tmp.end = note.end;
                             score.push(tmp);
                             tmp = {};
                         }
+                        console.log(note);
                     }
                     else    score.push(note);
                 }
