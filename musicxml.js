@@ -64,13 +64,6 @@ class MusicXML {
         let currentMeasure = 1;
 
         for(let s of score) {
-            if(currentTime > currentMeasure*noteNum){
-                currentMeasure++;
-                measure = dom.createElement('measure');
-                measure.setAttribute('number', currentMeasure);
-                part.appendChild(measure);
-            }
-            
             //restの挿入
             if(s.start - currentTime > 0) {
                 let tmp = {
@@ -92,10 +85,11 @@ class MusicXML {
                     note.appendChild(duration);
 
                     //measureが変わる時
-                    if(startMeasure !== endMeasure && i !== startMeasure) {
+                    if(i > currentMeasure) {
                         measure = dom.createElement('measure');
                         measure.setAttribute('number', ''+i);
                         part.appendChild(measure);
+                        currentMeasure = i;
                     }
                     measure.appendChild(note);
                 }
@@ -132,12 +126,6 @@ class MusicXML {
 
                 //tieの時
                 if(startMeasure !== endMeasure) {
-                    if(i > startMeasure){
-                        measure = dom.createElement('measure');
-                        measure.setAttribute('number', i+'');
-                        part.appendChild(measure);                            
-                    } 
-
                     const notations = dom.createElement('notations');
                     if(i !== endMeasure){
                         const tie = dom.createElement('tie');
@@ -149,9 +137,9 @@ class MusicXML {
                     }
                     if(i !== startMeasure) {
                         const tie = dom.createElement('tie');
-                        tie.setAttribute('type', 'end');
+                        tie.setAttribute('type', 'stop');
                         const tied = dom.createElement('tied');
-                        tied.setAttribute('type', 'end');
+                        tied.setAttribute('type', 'stop');
                         note.appendChild(tie);
                         notations.appendChild(tied);
                     }
@@ -178,7 +166,14 @@ class MusicXML {
                 lyric.appendChild(text);
 
                 note.appendChild(lyric);
-                measure.appendChild(note);    
+
+                if(i > currentMeasure){
+                    measure = dom.createElement('measure');
+                    measure.setAttribute('number', i+'');
+                    part.appendChild(measure);
+                    currentMeasure = i;
+                } 
+                measure.appendChild(note);
             }
             currentTime = s.end + 1;
         }
@@ -275,7 +270,7 @@ class MusicXML {
                             return t.getAttribute('type');
                         });
                         const isStart = tie_type.includes('start');
-                        const isStop = tie_type.includes('end');
+                        const isStop = tie_type.includes('stop');
                         if(isStart && !isStop) {
                             tmp = note;
                         }
