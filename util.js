@@ -80,7 +80,7 @@ class Util {
             URL.revokeObjectURL(audio.src);
         }, 0);
     }
-
+    
     openScore() {
         const showDialog = () => {
             return new Promise((resolve, reject) => {

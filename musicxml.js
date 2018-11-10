@@ -94,7 +94,8 @@ class MusicXML {
                     measure.appendChild(note);
                 }
             }
-
+            
+            //noteの挿入
             const startMeasure = Math.floor(s.start / noteNum) + 1;
             const endMeasure = Math.floor(s.end / noteNum) + 1;
             const pitch_strings = this.numToPitch(s.pitch);
@@ -178,9 +179,42 @@ class MusicXML {
             currentTime = s.end + 1;
         }
 
+        //小節の最後までrestを詰める
+        if(currentTime < currentMeasure*noteNum) {
+            const note = dom.createElement('note');
+            const rest = dom.createElement('rest');
+            const duration = dom.createElement('duration');
+            duration.textContent = currentMeasure*noteNum - currentTime;
+
+            note.appendChild(rest);
+            note.appendChild(duration);
+            measure.appendChild(note);
+        }
+
         const serializer = new XMLSerializer();
         const serialized = serializer.serializeToString(dom);
-        return head + serialized;
+        const formatted = this.formatXML(serialized);
+        return head + formatted;
+    }
+
+    formatXML(string) {
+        //</..>、<></..>にはマッチして、<><>、<../><>にはマッチしないようにしてインデント後の一行を取り出す（もっと綺麗になりそう）
+        const close = /(<\/.*?>)/;
+        const openAndClose = /(<[^/>]*?>[^<]*?<\/.*?>)/;
+        const none = /<.*?\/>/;
+        const open = /<.*?>/;
+        const split = /(<\/.*?>)|(<[^/>]*?>[^<]*?<\/.*?>)|(<.*?>)/;
+
+        const splitted = string.split(split).filter(s => s);
+
+        let depth = 0;
+        return splitted.map((s) => {
+            console.log(s, depth);
+            if(s.match(openAndClose))   return '\t'.repeat(depth)+s;
+            if(s.match(none))           return '\t'.repeat(depth)+s;
+            if(s.match(close))          return '\t'.repeat(--depth)+s;
+            if(s.match(open))           return '\t'.repeat(depth++)+s;
+        }).join('\n');
 
     }
 
