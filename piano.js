@@ -1,8 +1,10 @@
 class Piano {
-    constructor(verticalNum) {
+    constructor(verticalNum, basePitch) {
         this.canvas = document.getElementById("piano");
         this.ctx = this.canvas.getContext("2d");
         this.verticalNum = verticalNum;
+        this.basePitch = basePitch;
+        this.baseOctave = parseInt(basePitch.match(/\d/)[0], 10);
         this.resize();
     }
 
@@ -40,7 +42,7 @@ class Piano {
             this.ctx.fillRect(0, pianoCellHeight * (8 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
             this.ctx.fillRect(0, pianoCellHeight * (10 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
 
-            this.ctx.fillText("C" + String(o), this.areaWidth * 3 / 4,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
+            this.ctx.fillText("C" + String(this.baseOctave + o), this.areaWidth * 3 / 4,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
         }
     }
 }

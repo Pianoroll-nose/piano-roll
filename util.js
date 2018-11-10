@@ -1,12 +1,28 @@
 class Util {
-    constructor() {
+    constructor(basePitch, verticalNum) {
+        this.musicXML = new MusicXML(basePitch, verticalNum);
     }
 
-    downloadScore(score) {
+    downloadScore(score, notesPerMeasure, beats) {
+        const xml = this.musicXML.create(score, notesPerMeasure, beats);
+
+        const url = document.createElement("a");
+        url.download = document.getElementById('scoreName').value || 'score';
+        url.href = URL.createObjectURL(new Blob([xml], {'type': 'application/xml'}));
+        url.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(url.href);
+        }, 0);
+
+        /*
         const url = document.createElement("a");
         url.download = document.getElementById('scoreName').value || 'score';
         url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
         url.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(url.href);
+        }, 0);
+        */
     }
 
     //https://qiita.com/HirokiTanaka/items/56f80844f9a32020ee3b (10/13)
@@ -64,13 +80,13 @@ class Util {
             URL.revokeObjectURL(audio.src);
         }, 0);
     }
-
+    
     openScore() {
         const showDialog = () => {
             return new Promise((resolve, reject) => {
                 const input = document.createElement("input");
                 input.type = 'file';
-                input.accept = '.json, application/json';
+                input.accept = '.xml, application/xml';
                 input.onchange = (e) => {resolve(e.target.files[0]);}
                 input.click();
             });
@@ -81,7 +97,11 @@ class Util {
                 const reader = new FileReader();
                 reader.readAsText(file);
                 reader.onload = () => {
-                    resolve(JSON.parse(reader.result));
+                    try{
+                        resolve(this.musicXML.read(reader.result));
+                    }catch(e){
+                        reject(e);
+                    }
                 }
             });
         };
@@ -89,24 +109,6 @@ class Util {
         return (async () => {
             const file = await showDialog();
             const score = await readFile(file);
-
-            if(!Array.isArray(score)){
-                return new Promise((resolve, reject) => {
-                    reject('this is not a score.');
-                });
-            }
-
-            const property = ['start', 'end', 'lyric', 'pitch'];
-            for(let i = 0; i < score.length; i++) {
-                for(let p of property) {
-                    const has = score[i].hasOwnProperty(p);
-                    if(!has){
-                        return new Promise((resolve, reject) => {
-                            reject('this is not a score.');
-                        });
-                    }
-                }
-            }
             return score;
         })();
     }
