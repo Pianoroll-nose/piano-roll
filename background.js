@@ -23,7 +23,7 @@ class BackGround {
         const cellHeight = this.areaHeight / this.verticalNum;
         this.ctx.strokeStyle = "black";
 
-        for(let i = 0; i < this.measureNum; i++){
+        for(let i = 0; i <= this.measureNum; i++){
             this.ctx.lineWidth = (i % this.beats == 0) ? 4 : 1;
 
             this.ctx.beginPath();

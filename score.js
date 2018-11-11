@@ -185,23 +185,7 @@ class Score {
             txtBox.parentNode.removeChild(txtBox);
             this.canvas.style.pointerEvents = "auto";
         }
-        /*
-        input.onblur = function() {
-            this.parentNode.removeChild(this);
-            console.log(this);
-        };
-        /*
-        input.onkeypress = function(e) {
-            if(e.keyCode === 13){
-                const txtBox = document.getElementById("lyric");
-                const add = Object.assign({}, this.score[index]);
-                add.lyric = txtBox.value;
-                this.addNote(add);
-                txtBox.blur();
-                this.draw();
-            }
-        }.bind(this);
-        */
+
         //テキストボックスの追加
         this.canvas.parentNode.insertBefore(input, this.canvas.nextSibling);
 

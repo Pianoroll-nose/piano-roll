@@ -4,6 +4,7 @@ function start(){
     let eContainer = document.getElementById("editor-container");
     //canvasの幅をdivの幅に揃える
     document.getElementById('piano').width = pContainer.clientWidth;
+    document.getElementById('bar').height = bContainer.clientHeight;
 
     //スクロールを合わせる
     pContainer.addEventListener('scroll', () => {

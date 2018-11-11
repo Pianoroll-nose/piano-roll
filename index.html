@@ -19,12 +19,11 @@
     <div id="container">
         <div id="menu-container">
             <audio id="audio"></audio>
-            <input type="button" id="button1" value="再生">
-            <input type="button" id="button2" value="一時停止">
-            <input type="button" id="button3" value="停止">
+            <button id="play">play</button>
+            <button id="pause">pause</button>
+            <button id="stop">stop</button>
             <button id="undo">undo</button>
             <button id="redo">redo</button>
-            <button id="play">play</button>
             <button id="clear">clear</button>
             <div>
                 <input type="text" id="wavName" value="" placeholder="ファイル名を入力">
@@ -43,23 +42,29 @@
                 <button id="h-up" class="zoom">+</button>
                 <button id="h-down" class="zoom">-</button>    
             </div>
+            <div>
+                <input type="text" id="bpm" value="" placeholder="bpmを入力">
+                <button id="updateBpm">ok</button>
+            </div>
+
         </div>
 
-        <div id="container2">
-            <div id="empty-container">
-            </div>
+        <div style="width:100%; height:5%;">
+            <div style="float:left; width:20%;"></div>
             <div id="bar-container">
-                <canvas id="bar" width="3000px" height="40px"></canvas>
+                <canvas id="bar" width="3000px"></canvas>  
             </div>
         </div>
 
-        <div id="piano-container">    
-            <canvas id="piano" height="1000px"></canvas>
-        </div>
-
-        <div id="editor-container">
-            <canvas id="background" width="3000px" height="1000px"></canvas>
-            <canvas id="score" width="3000px" height="1000px"></canvas>
+        <div style="width:100%; height:85%;">
+            <div id="piano-container">    
+                <canvas id="piano" height="1000px"></canvas>
+            </div>
+            
+            <div id="editor-container">      
+                <canvas id="background" width="3000px" height="1000px"></canvas>
+                <canvas id="score" width="3000px" height="1000px"></canvas>
+            </div>
         </div>
     </div>
 </body>

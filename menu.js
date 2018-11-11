@@ -8,15 +8,12 @@ class Menu {
         this.verticalNum = 24;
         this.basePitch = 'C4';
         this.beats = 4;     //1小節に何拍あるか
-
-        this.button1 = document.getElementById("button1");
-        this.button2 = document.getElementById("button2");
-        this.button3 = document.getElementById("button3");
+        this.bpm = 120;
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
         this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
-        this.bar = new Bar(this.verticalNum);
+        this.bar = new Bar(this.bpm, this.horizontalNum, this.beats);
         
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
@@ -26,7 +23,10 @@ class Menu {
                 audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
             }
             this.util.playAudio(audioData);
+            this.bar.play();
         }
+        document.getElementById('pause').onclick = this.bar.pause.bind(this.bar);
+        document.getElementById('stop').onclick = this.bar.stop.bind(this.bar);
         document.getElementById('clear').onclick = this.editor.clear.bind(this.editor);
         document.getElementById('downloadWav').onclick = () => {
             const audioData = [];
@@ -44,6 +44,10 @@ class Menu {
             }).catch((e) => {
                 alert(e);
             });
+        }
+        document.getElementById('updateBpm').onclick = () => {
+            const bpm = this.bpm = parseInt(document.getElementById('bpm').value, 10) || this.bpm;
+            this.bar.updateBpm(bpm);
         }
 
         //ToDo:もう少し綺麗に記述できそう
@@ -73,9 +77,6 @@ class Menu {
                 }
             }
         });
-        this.button1.addEventListener("click", this.bar.barStart.bind(this.bar), false);
-        this.button2.addEventListener("click", this.bar.barStop.bind(this.bar), false);
-        this.button3.addEventListener("click", this.bar.barReset.bind(this.bar), false);
     }
 
     resize() {
