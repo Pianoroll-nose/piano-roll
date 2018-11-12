@@ -34,12 +34,9 @@ class Bar {
             else {
                 const diffMin = (currentTime - startTime) / 1000 / 60;   //ms->s->m
                 this.x = diffMin * this.bpm * this.beats * this.cellWidth;
-                
+
                 this.id = requestAnimationFrame(animation);    
 
-                if(this.x > this.canvas.innerWidth) { 
-                    this.container.scrollLeft = this.x;
-                }
             }
         };
 

@@ -47,6 +47,7 @@ class Menu {
         }
         document.getElementById('updateBpm').onclick = () => {
             const bpm = this.bpm = parseInt(document.getElementById('bpm').value, 10) || this.bpm;
+            document.getElementById('bpm').value = bpm;
             this.bar.updateBpm(bpm);
         }
 

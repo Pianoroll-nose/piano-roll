@@ -21,6 +21,12 @@ class Score {
         this.stackTop = 0;
 
         this.isClicked = false;
+        this.isMoving = false;
+        this.selectedNotes = new Array();
+        this.lastClicked = {
+            x: null,
+            y: null
+        };
         this.isDragging = false;
         this.dragProperty = {
             start: null,
@@ -36,30 +42,48 @@ class Score {
     }
 
     draw() {
+        const _draw = (score, color) => {
+            for(let s of score){
+                let left = s.start * this.cellWidth;
+                let top = s.pitch * this.cellHeight;
+                let width = (s.end - s.start + 1) * this.cellWidth;
+    
+                //四角の描画
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(left, top, width, this.cellHeight);
+                this.ctx.strokeRect(left, top, width, this.cellHeight);
+    
+                //歌詞の描画
+                this.ctx.fillStyle = "black";
+                this.ctx.fillText(s.lyric, left, top + this.cellHeight / 2, width);
+            }                
+        }
+
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
 
         this.ctx.strokeStyle = "black";
         this.ctx.font = this.cellHeight + "px Arial";
         this.ctx.textBaseline = "middle";
 
-        let objs = this.score.concat();
-        if(this.isDragging){
-            objs.push(this.dragProperty);
+        _draw(this.score.filter((e, i) => this.selectedNotes.map(e => e.index).indexOf(i) === -1), "red");
+
+        if(this.isDragging) {
+            _draw([this.dragProperty], "rgba(255, 0, 0, 0.4)");
         }
 
-        for(let obj of objs){
-            let left = obj.start * this.cellWidth;
-            let top = obj.pitch * this.cellHeight;
-            let width = (obj.end - obj.start + 1) * this.cellWidth;
+        /*どうにかできそう*/
+        if(this.selectedNotes.length > 0) {
+            _draw(this.score.map((e, i) => {
+                const obj = Object.assign({}, e);
+                const index = this.selectedNotes.map(e => e.index).indexOf(i);
+                if(index !== -1) {
+                    obj.start += this.selectedNotes[index].diffX;
+                    obj.end += this.selectedNotes[index].diffX;
+                    obj.pitch += this.selectedNotes[index].diffY;    
+                }
 
-            //四角の描画
-            this.ctx.fillStyle = obj === this.dragProperty ? "rgba(255, 0, 0, 0.4)" : "red";
-            this.ctx.fillRect(left, top, width, this.cellHeight);
-            this.ctx.strokeRect(left, top, width, this.cellHeight);
-
-            //歌詞の描画
-            this.ctx.fillStyle = "black";
-            this.ctx.fillText(obj.lyric, left, top + this.cellHeight / 2, width);
+                return obj;
+            }).filter((e, i) => this.selectedNotes.map(e => e.index).indexOf(i) !== -1), "rgba(0, 0, 255, 0.4)");
         }
     }
 
@@ -111,6 +135,7 @@ class Score {
         this.draw();
     }
 
+    //考え直す必要あり
     addNote(obj) {
         let shouldDelete = true, objList = [obj];
 
@@ -145,15 +170,16 @@ class Score {
                 let tmp = Object.assign({}, this.score[i_e]);
                 tmp.start = obj.end+1;
                 objList.push(tmp);
+                i_e++;
                 break;
             }
 
-            if(this.score[i_e].end >= obj.end){
+            if(this.score[i_e].end > obj.end){
                 break;
             }
         }
 
-        let deleteNum = shouldDelete ? i_e-i_s+1 : 0;
+        let deleteNum = shouldDelete ? i_e-i_s : 0;
 
         const removed = Array.prototype.splice.apply(this.score, [i_s, deleteNum].concat(objList));
         this.scoreStack.add(i_s, removed, objList);
@@ -203,8 +229,40 @@ class Score {
         const xIndex = Math.floor(x / this.cellWidth);
         const yIndex = Math.floor(y / this.cellHeight);
         const sameIndex = this.noteExists(xIndex, yIndex);
+        this.lastClicked.x = xIndex;
+        this.lastClicked.y = yIndex;
 
-        if(sameIndex !== -1){
+        /*
+        if(this.isClicked){
+            this.addTextBox(sameIndex);
+            this.isClicked = false;
+        }
+        else{
+            this.isClicked = true;
+            setTimeout(function() {
+                if(this.isClicked){
+                    this.scoreStack.add(sameIndex, this.score.splice(sameIndex, 1), []);
+                }
+                this.isClicked = false;
+                this.draw();
+            }.bind(this), 200);
+        }
+*/
+        if(sameIndex !== -1) {
+            //選択されていないノートの時
+            const selectedIndex = this.selectedNotes.map(e => e.index).indexOf(sameIndex);
+            if(selectedIndex === -1) {
+                const pushed = {
+                    index: sameIndex,
+                    diffX: 0,
+                    diffY: 0
+                };
+                if(e.shiftKey)  this.selectedNotes.push(pushed);
+                else            this.selectedNotes = [pushed];
+            }
+            this.isClicked = true;
+
+            /*
             if(this.isClicked){
                 this.addTextBox(sameIndex);
                 this.isClicked = false;
@@ -219,8 +277,12 @@ class Score {
                     this.draw();
                 }.bind(this), 200);
             }
+            */
         }
         else{
+            for(let s of this.selectedNotes)    this.addNote(s);
+            this.selectedNotes = [];
+
             this.dragProperty.start = xIndex;
             this.dragProperty.pitch = yIndex;
             this.dragProperty.end = xIndex;
@@ -231,7 +293,28 @@ class Score {
     }
 
     onMouseUp(e) {
-        if(this.isDragging){
+        if(this.isMoving) {
+            this.isClicked = false;
+            this.isMoving = false;
+            for(let i of this.selectedNotes) {
+                const removed = this.score.splice(i.index, 1)[0];
+
+                let added = Object.assign({}, removed);
+                added.start = Math.max(0, added.start+i.diffX);
+                added.end = Math.min(this.horizontalNum-1, added.end+i.diffX);
+                added.pitch += i.diffY;
+                this.addNote(added);
+                
+                this.scoreStack[this.stackTop].removed.push(removed);
+                this.selectedNotes = [];
+            }
+            this.draw();
+        }
+        else {
+            this.isClicked = false;
+        }
+
+        if(this.isDragging) {
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             this.dragProperty.end = Math.max(this.dragProperty.start, Math.floor(x / this.cellWidth));
@@ -250,9 +333,23 @@ class Score {
     }
 
     onMouseMove(e) {
-        if(this.isDragging){
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
+        const rect = e.target.getBoundingClientRect();
+        const x = Math.max(0, e.clientX - rect.left);
+        const y = Math.max(0, e.clientY - rect.top);
+        const xIndex = Math.floor(x / this.cellWidth);
+        const yIndex = Math.floor(y / this.cellHeight);
+        const diffX = xIndex - this.lastClicked.x;
+        const diffY = yIndex - this.lastClicked.y;
+
+        if(this.isClicked) {
+            for(let s of this.selectedNotes){
+                s.diffX = diffX;
+                s.diffY = diffY;
+            }
+            this.isMoving = true;
+            this.draw();
+        }
+        if(this.isDragging) {
             this.dragProperty.end = Math.max(this.dragProperty.start, Math.floor(x / this.cellWidth));
             this.draw();
         }
