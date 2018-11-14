@@ -28,6 +28,7 @@ class Menu {
         document.getElementById('pause').onclick = this.bar.pause.bind(this.bar);
         document.getElementById('stop').onclick = this.bar.stop.bind(this.bar);
         document.getElementById('clear').onclick = this.editor.clear.bind(this.editor);
+        document.getElementById('remove').onclick = () => this.editor.remove(false);
         document.getElementById('downloadWav').onclick = () => {
             const audioData = [];
             for(var i = 0; i < 44100*2; i++){

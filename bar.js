@@ -11,15 +11,13 @@ class Bar {
         this.resize();
 
         this.x = 0;
-        this.isStopped = true;
     }
 
     play() {
-        this.isStopped = false;
-
         if(this.id !== null)    this.cancelAnimation();
 
         const startTime = performance.now();
+        const startX = this.x;
         
         const animation = () => {
             this.drawTriangle();
@@ -33,7 +31,7 @@ class Bar {
             }
             else {
                 const diffMin = (currentTime - startTime) / 1000 / 60;   //ms->s->m
-                this.x = diffMin * this.bpm * this.beats * this.cellWidth;
+                this.x = startX + diffMin * this.bpm * this.beats * this.cellWidth;
 
                 this.id = requestAnimationFrame(animation);    
 
@@ -44,14 +42,11 @@ class Bar {
     }
 
     pause() {
-        this.isStopped = !this.isStopped;
         this.cancelAnimation();
     }
 
     stop() {
-        this.isStopped = true;
         this.x = 0;
-
         this.cancelAnimation();
 
         this.drawTriangle();

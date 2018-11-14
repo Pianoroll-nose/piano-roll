@@ -147,14 +147,22 @@ class Score {
         this.draw();
     }
 
+    removeSelectedNotes(flag) {
+        this.selectedNotes.sort((a, b) => b.index - a.index);
+        for(let s of this.selectedNotes){
+            this.scoreStack.add(s.index, this.score.splice(s.index, 1), [], flag);
+            flag = true;
+        }
+        this.selectedNotes = [];
+        this.draw();
+        return flag
+    }
+
     //考え直す必要あり
     addNotes(objs) {
         let alreadyContinued = false;
         //選択されているノートを一旦削除
-        for(let s of this.selectedNotes){
-            this.scoreStack.add(s.index, this.score.splice(s.index, 1), [], alreadyContinued);
-            alreadyContinued = alreadyContinued || true;
-        }
+        alreadyContinued = this.removeSelectedNotes(alreadyContinued);
 
         for(let i = 0, obj_length = objs.length; i < obj_length; i++) {
             const obj = objs[i];
@@ -204,7 +212,7 @@ class Score {
     
             const removed = Array.prototype.splice.apply(this.score, [i_s, deleteNum].concat(objList));
             this.scoreStack.add(i_s, removed, objList, alreadyContinued);
-            alreadyContinued = alreadyContinued || true;    
+            alreadyContinued = true;    
         }
     }
 
@@ -224,9 +232,12 @@ class Score {
         input.style.border = "0px";
         input.style.backgroundColor = "red";
         this.canvas.style.pointerEvents = "none";
-
-        input.onchange = () => {
+        let isCalled = false;
+        
+        const add = () => {
             const txtBox = document.getElementById("lyric");
+            if(isCalled)    return;
+            isCalled = true;
             const add = Object.assign({}, this.score[index]);
             add.lyric = txtBox.value;
             this.addNotes([add]);
@@ -235,12 +246,18 @@ class Score {
             this.canvas.style.pointerEvents = "auto";
         }
 
+        input.onblur = add;
+
+        input.onchange = add;
+
         //テキストボックスの追加
         this.canvas.parentNode.insertBefore(input, this.canvas.nextSibling);
 
         //テキストボックスにフォーカスを合わせる
         setTimeout(function() {
-            document.getElementById("lyric").focus();
+            const tar = document.getElementById("lyric");
+            tar.focus();
+            tar.select();
         }, 0);
 
     }
@@ -255,22 +272,6 @@ class Score {
         this.lastClicked.x = xIndex;
         this.lastClicked.y = yIndex;
 
-        /*
-        if(this.isClicked){
-            this.addTextBox(sameIndex);
-            this.isClicked = false;
-        }
-        else{
-            this.isClicked = true;
-            setTimeout(function() {
-                if(this.isClicked){
-                    this.scoreStack.add(sameIndex, this.score.splice(sameIndex, 1), []);
-                }
-                this.isClicked = false;
-                this.draw();
-            }.bind(this), 200);
-        }
-*/
         if(sameIndex !== -1) {
             if(this.isClicked){
                 this.selectedNotes = [];
@@ -280,52 +281,27 @@ class Score {
             else{
                 this.isClicked = true;
                 setTimeout(function() {
-                    if(this.isClicked){
-                        //選択されていないノートの時
-                        const selectedIndex = this.selectedNotes.map(e => e.index).indexOf(sameIndex);
-                        const pushed = {
-                            index: sameIndex,
-                            diffX: 0,
-                            diffY: 0
-                        };
-                        if(selectedIndex === -1) {
-                            if(e.shiftKey)  this.selectedNotes.push(pushed);
-                            else            this.selectedNotes = [pushed];
-                        }
-                        else {
-                            if(e.shiftKey)  this.selectedNotes.splice(selectedIndex, 1);
-                        }            
+                    //選択されていないノートの時
+                    const selectedIndex = this.selectedNotes.map(e => e.index).indexOf(sameIndex);
+                    const pushed = {
+                        index: sameIndex,
+                        diffX: 0,
+                        diffY: 0
+                    };
+                    if(selectedIndex === -1) {
+                        if(e.shiftKey)  this.selectedNotes.push(pushed);
+                        else            this.selectedNotes = [pushed];
+                        this.isClicked = false;
+                    }
+                    else {
+                        if(e.shiftKey)  this.selectedNotes.splice(selectedIndex, 1);
                     }
                     this.isClicked = false;
                     this.draw();
-                }.bind(this), 200);
+                }.bind(this), 300);
             }
 
             this.mouseDown = true;
-/*
-            setTimeout(function() {
-                if(!this.isClicked){
-                    this.addTextBox(sameIndex);
-                }
-                this.draw();
-            }.bind(this), 200);
-*/
-            /*
-            if(this.isClicked){
-                this.addTextBox(sameIndex);
-                this.isClicked = false;
-            }
-            else{
-                this.isClicked = true;
-                setTimeout(function() {
-                    if(this.isClicked){
-                        this.scoreStack.add(sameIndex, this.score.splice(sameIndex, 1), []);
-                    }
-                    this.isClicked = false;
-                    this.draw();
-                }.bind(this), 200);
-            }
-            */
         }
         else{
             this.selectedNotes = [];
@@ -342,7 +318,7 @@ class Score {
         this.mouseDown = false;
         if(this.isMoving) {
             this.isMoving = false;
-            this.selectedNotes.sort((a, b) => b.index - a.index);
+
             const notesAdded = this.selectedNotes.map(e => {
                 let s = Object.assign({}, this.score[e.index]);
                 s.start = Math.max(0, s.start+e.diffX);
@@ -352,7 +328,7 @@ class Score {
             });
 
             this.addNotes(notesAdded);
-            this.selectedNotes = [];
+
             this.draw();
         }
 

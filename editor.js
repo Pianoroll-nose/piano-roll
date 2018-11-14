@@ -30,6 +30,10 @@ class Editor {
         this.score.clear();
     }
 
+    remove() {
+        this.score.removeSelectedNotes();
+    }
+    
     draw() {
         this.backGround.draw();
         this.score.draw();
