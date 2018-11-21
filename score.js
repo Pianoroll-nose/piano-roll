@@ -279,25 +279,27 @@ class Score {
                 this.isClicked = false;
             }
             else{
-                this.isClicked = true;
-                setTimeout(function() {
-                    //選択されていないノートの時
-                    const selectedIndex = this.selectedNotes.map(e => e.index).indexOf(sameIndex);
-                    const pushed = {
-                        index: sameIndex,
-                        diffX: 0,
-                        diffY: 0
-                    };
-                    if(selectedIndex === -1) {
-                        if(e.shiftKey)  this.selectedNotes.push(pushed);
-                        else            this.selectedNotes = [pushed];
-                        this.isClicked = false;
-                    }
-                    else {
-                        if(e.shiftKey)  this.selectedNotes.splice(selectedIndex, 1);
-                    }
+                this.isClicked = true;                    
+                //選択されていないノートの時
+                const selectedIndex = this.selectedNotes.map(e => e.index).indexOf(sameIndex);
+                const pushed = {
+                    index: sameIndex,
+                    diffX: 0,
+                    diffY: 0
+                };
+                if(selectedIndex === -1) {
+                    if(e.shiftKey)  this.selectedNotes.push(pushed);
+                    else            this.selectedNotes = [pushed];
                     this.isClicked = false;
-                    this.draw();
+                }
+                else {
+                    if(e.shiftKey)  this.selectedNotes.splice(selectedIndex, 1);
+                }
+                this.draw();
+                
+                setTimeout(function() {
+                    this.isClicked = false;
+
                 }.bind(this), 300);
             }
 

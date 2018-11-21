@@ -64,7 +64,7 @@ class Bar {
 
     drawTriangle() {
         const triangleWidth = this.areaWidth / 200;
-        const triangleHeight = this.areaHeight * 2 / 3;
+        const triangleHeight = this.areaHeight;
 
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
         this.ctx.strokeStyle = "black";

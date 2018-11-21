@@ -209,7 +209,6 @@ class MusicXML {
 
         let depth = 0;
         return splitted.map((s) => {
-            console.log(s, depth);
             if(s.match(openAndClose))   return '\t'.repeat(depth)+s;
             if(s.match(none))           return '\t'.repeat(depth)+s;
             if(s.match(close))          return '\t'.repeat(--depth)+s;
