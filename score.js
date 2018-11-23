@@ -6,8 +6,8 @@ class Score {
         this.horizontalNum = horizontalNum;
         this.verticalNum = verticalNum;
 
-        this.score = new Array();
-        this.scoreStack = new Array();
+        this.score = [];
+        this.scoreStack = [];
         this.scoreStack.push(null);
         this.scoreStack.add = (index, removed, added, flag) => { 
             this.scoreStack.splice(this.stackTop+1, this.score.length-this.stackTop+1);
@@ -24,7 +24,7 @@ class Score {
         this.mouseDown = false;
         this.isClicked = false;
         this.isMoving = false;
-        this.selectedNotes = new Array();
+        this.selectedNotes = [];
         this.lastClicked = {
             x: null,
             y: null
@@ -40,6 +40,11 @@ class Score {
         this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this), false);
         window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
         window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+        window.addEventListener('keydown', (e) => {
+            if((e.key === 'Delete' || e.key === 'Backspace') && this.selectedNotes.length !== 0){
+                this.removeSelectedNotes();
+            }
+        }, false);
         this.resize();
     }
 
@@ -263,6 +268,8 @@ class Score {
     }
 
     onMouseDown(e) {
+        if(e.button !== 0)  return;
+
         const rect = e.target.getBoundingClientRect();
         const x = Math.max(0, e.clientX - rect.left);
         const y = Math.max(0, e.clientY - rect.top);
@@ -317,6 +324,8 @@ class Score {
     }
 
     onMouseUp(e) {
+        if(e.button !== 0)  return;
+
         this.mouseDown = false;
         if(this.isMoving) {
             this.isMoving = false;

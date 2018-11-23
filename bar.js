@@ -84,6 +84,7 @@ class Bar {
     resize() {
         this.areaWidth = this.canvas.clientWidth;
         this.areaHeight = this.canvas.clientHeight;
+        this.drawTriangle();
         this.stop();
     }
 }
