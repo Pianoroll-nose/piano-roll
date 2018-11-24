@@ -9,18 +9,26 @@ class Menu {
         this.basePitch = 'C4';
         this.beats = 4;     //1小節に何拍あるか
         this.bpm = 120;
+        this.mode = 1;
 
-        this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats);
+        this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
         this.bar = new Bar(this.bpm, this.horizontalNum, this.beats);
-        
+
+        document.getElementsByName('mode').forEach((e) => {
+            e.onchange = () => {
+                this.mode = modes[e.value];
+                this.editor.changeMode(this.mode);
+            };
+        });
+
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
         document.getElementById('play').onclick = () => {
             const audioData = [];
-            for(var i = 0; i < 44100*2; i++){
-                audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
+            for (var i = 0; i < 44100 * 2; i++) {
+                audioData.push(Math.floor(Math.sin(Math.PI * 2 * i / 44100 * 440) * 128 + 128));
             }
             this.util.playAudio(audioData);
             this.bar.play();
@@ -31,8 +39,8 @@ class Menu {
         document.getElementById('remove').onclick = () => this.editor.remove(false);
         document.getElementById('downloadWav').onclick = () => {
             const audioData = [];
-            for(var i = 0; i < 44100*2; i++){
-                audioData.push(Math.floor(Math.sin(Math.PI*2*i/44100*440) * 128 + 128));
+            for (var i = 0; i < 44100 * 2; i++) {
+                audioData.push(Math.floor(Math.sin(Math.PI * 2 * i / 44100 * 440) * 128 + 128));
             }
             this.util.downloadWav(audioData);
         }
@@ -55,8 +63,8 @@ class Menu {
         //ToDo:もう少し綺麗に記述できそう
         document.querySelectorAll('.zoom').forEach((button, index) => {
             const id = button.id;
-            const addOrSub = (id, value) => (id.endsWith('up')) ? value+100 : value-100;
-            if(id.startsWith('w')) {
+            const addOrSub = (id, value) => (id.endsWith('up')) ? value + 100 : value - 100;
+            if (id.startsWith('w')) {
                 button.onclick = () => {
                     const elements = document.querySelectorAll('canvas:not(#piano)');
                     elements.forEach((element, index) => {
@@ -64,7 +72,7 @@ class Menu {
                         element.width = Math.max(2000, Math.min(6000, addOrSub(id, element.width)));
                     })
                     this.editor.resize();
-                    this.bar.resize();    
+                    this.bar.resize();
                 }
             }
             else {
@@ -75,7 +83,7 @@ class Menu {
                         element.height = Math.max(500, Math.min(3000, addOrSub(id, element.height)));
                     })
                     this.editor.resize();
-                    this.piano.resize();    
+                    this.piano.resize();
                 }
             }
         });

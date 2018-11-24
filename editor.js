@@ -1,12 +1,13 @@
 //打ち込み画面を管理するクラス
 class Editor {
-    constructor(verticalNum, horizontalNum, measureNum, beats){
+    constructor(verticalNum, horizontalNum, measureNum, beats, mode){
         this.verticalNum = verticalNum;
         this.horizontalNum = horizontalNum;
         this.measureNum = measureNum;
         this.beats = beats;
 
         this.score = new Score(this.horizontalNum, this.verticalNum);
+        this.score.changeMode(mode);
 
         this.backGround = new BackGround(this.measureNum, this.verticalNum, this.beats);
 
@@ -16,6 +17,10 @@ class Editor {
     resize() {
         this.score.resize();
         this.backGround.resize();
+    }
+
+    changeMode(mode) {
+        this.score.changeMode(mode);
     }
 
     undo() {

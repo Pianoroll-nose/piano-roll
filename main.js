@@ -38,4 +38,10 @@ function start(){
         }
     })();
 
-}
+};
+
+const modes = {
+    'select': 0,
+    'pen': 1,
+    'erase': 2
+};

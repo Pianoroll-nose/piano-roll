@@ -18,6 +18,10 @@ button{
     appearance: none;
 }
 
+input[type="radio"]{
+    display: none;
+}
+
 button:active{
     background-color: cyan;
 }
@@ -141,7 +145,11 @@ button:active{
     flex-direction: column;
 }
 
-.mode button{
+.mode input[type="radio"]:checked + label{
+    background-color: cyan;
+}
+
+.mode label{
     border: solid 1px #000000;
     font-size: 1em;
     padding: 0.5em;
