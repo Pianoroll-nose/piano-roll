@@ -13,22 +13,10 @@ class Util {
         setTimeout(() => {
             URL.revokeObjectURL(url.href);
         }, 0);
-
-        /*
-        const url = document.createElement("a");
-        url.download = document.getElementById('scoreName').value || 'score';
-        url.href = URL.createObjectURL(new Blob([JSON.stringify(score)], {'type': 'application/json'}));
-        url.click();
-        setTimeout(() => {
-            URL.revokeObjectURL(url.href);
-        }, 0);
-        */
     }
 
-    //https://qiita.com/HirokiTanaka/items/56f80844f9a32020ee3b (10/13)
-    //http://www.ys-labo.com/pc/2009/091223%20File.html (10/13)
     createWav(audioData) { 
-        const buf = new ArrayBuffer(44 + audioData.length);
+        const buf = new ArrayBuffer(44 + audioData.length*2);
         const view = new DataView(buf);
 
         const writeString = (offset, string) => {
@@ -38,23 +26,23 @@ class Util {
         }
 
         //ヘッダ情報の書き込み
-        //44100Hz, 8bit
-        writeString(0, 'RIFF'); //RIFFヘッダ
-        view.setUint32(4, 32+audioData.length, true);
+        //44100Hz, 16bit
+        writeString(0, 'RIFF');
+        view.setUint32(4, 32 + audioData.length * 2, true);
         writeString(8, 'WAVE');
         writeString(12, 'fmt ');
         view.setUint32(16, 16, true);
         view.setUint16(20, 1, true);
         view.setUint16(22, 1, true);
         view.setUint32(24, 44100, true);
-        view.setUint32(28, 44100, true);
-        view.setUint16(32, 1, true);
-        view.setUint16(34, 8, true);
+        view.setUint32(28, 44100 * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
         writeString(36, 'data');
-        view.setUint32(40, audioData.length, true);
-        
-        for(let i = 0, offset = 44; i < audioData.length; i++, offset++) {
-            view.setUint8(offset, audioData[i], true);
+        view.setUint32(40, audioData.length * 2, true);
+
+        for (let i = 0, offset = 44; i < audioData.length; i++ , offset += 2) {
+            view.setInt16(offset, Math.max(-32767, Math.min(32767, Math.floor(audioData[i] * 32767))), true);
         }
 
         return buf;

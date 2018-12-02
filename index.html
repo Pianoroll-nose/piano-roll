@@ -8,12 +8,14 @@
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU"
         crossorigin="anonymous">
+    <script src="synthesis.js"></script>
     <script src="main.js"></script>
     <script src="menu.js"></script>
     <script src="util.js"></script>
     <script src="musicxml.js"></script>
     <script src="bar.js"></script>
     <script src="editor.js"></script>
+    <script src="world.js"></script>
     <script src="background.js"></script>
     <script src="score.js"></script>
     <script src="piano.js"></script>
@@ -61,7 +63,7 @@
                 </div>
                 <div class="parameters">
                     <p>TEMPO</p>
-                    <p>120.00</p>
+                    <p id="bpm">120.00</p>
                 </div>
                 <div class="parameters">
                     <p>BEAT</p>
@@ -109,7 +111,7 @@
                     <button id="h-down" class="zoom">-</button>
                 </div>
                 <div>
-                    <input type="text" id="bpm" value="120" placeholder="bpmを入力">
+                    <input type="text" id="bpm_in" value="120" placeholder="bpmを入力">
                     <button id="updateBpm">ok</button>
                 </div>
                 <button id="remove">選択範囲を削除</button>

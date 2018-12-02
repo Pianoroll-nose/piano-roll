@@ -2,6 +2,7 @@ class Bar {
     constructor(bpm, horizontalNum, beats) {
         this.container = document.getElementById("bar-container");
         this.canvas = document.getElementById("bar");
+        this.audio = document.getElementById("audio");
         this.ctx = this.canvas.getContext("2d");
         this.bpm = bpm;
         this.horizontalNum = horizontalNum;
@@ -32,7 +33,7 @@ class Bar {
             else {
                 const diffMin = (currentTime - startTime) / 1000 / 60;   //ms->s->m
                 this.x = startX + diffMin * this.bpm * this.beats * this.cellWidth;
-
+                
                 this.id = requestAnimationFrame(animation);    
 
             }

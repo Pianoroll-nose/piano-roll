@@ -88,12 +88,15 @@ button:active{
 }
 
 .menu > li:hover{
+    /*
     background-color: aliceblue;
+    */
 }
 
 .menu > li:hover > ul > li{
     width: 100%;
     padding: 0px;
+    list-style: none;
     transition: .2s;
     border: solid 1px #000000;
     border-bottom: none;
@@ -115,10 +118,10 @@ button:active{
     border: solid 1px #000000;
 }
 
-#button-container div{
+#button-container > div{
     flex: 3;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     text-align: center;
     justify-content: center;
     align-items: center;
@@ -143,6 +146,7 @@ button:active{
     display: flex;
     text-align: center;
     flex-direction: column;
+    margin: 1%;
 }
 
 .mode input[type="radio"]:checked + label{
@@ -175,9 +179,6 @@ button:active{
     border-bottom: 1px solid #999999;
 }
 
-#bar{
-    height: 100%;
-}
 
 #piano-container{
     grid-row: 5;

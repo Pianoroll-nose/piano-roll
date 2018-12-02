@@ -1,6 +1,6 @@
 //打ち込み画面を管理するクラス
 class Editor {
-    constructor(verticalNum, horizontalNum, measureNum, beats, mode){
+    constructor(verticalNum, horizontalNum, measureNum, beats, mode) {
         this.verticalNum = verticalNum;
         this.horizontalNum = horizontalNum;
         this.measureNum = measureNum;
@@ -26,8 +26,8 @@ class Editor {
     undo() {
         this.score.undo();
     }
-    
-    redo() { 
+
+    redo() {
         this.score.redo();
     }
 
@@ -38,7 +38,7 @@ class Editor {
     remove() {
         this.score.removeSelectedNotes();
     }
-    
+
     draw() {
         this.backGround.draw();
         this.score.draw();
@@ -48,7 +48,7 @@ class Editor {
         return this.score.score;
     }
 
-    setScore(score) { 
+    setScore(score) {
         this.score.setScore(score);
     }
 }

@@ -23,7 +23,16 @@ function start(){
         bContainer.scrollLeft = eContainer.scrollLeft;
     });
 
-    menu = new Menu();
+    const menu = new Menu();
+
+    const setFunc = () => {
+        if(isInstantiated)  
+            menu.setFunction(Module.cwrap('synthesis', null, ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']));
+        else {
+            setTimeout(setFunc, 300);
+        }
+    };
+    setFunc();
 
     //画面のリサイズ処理の登録
     (function(){
@@ -45,3 +54,9 @@ const modes = {
     'pen': 1,
     'erase': 2
 };
+
+
+let isInstantiated = false;
+Module.onRuntimeInitialized = () => {
+    isInstantiated = true;
+}

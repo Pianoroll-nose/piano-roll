@@ -15,6 +15,7 @@ class Menu {
         this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
         this.bar = new Bar(this.bpm, this.horizontalNum, this.beats);
+        this.world = new World();
 
         document.getElementsByName('mode').forEach((e) => {
             e.onchange = () => {
@@ -23,14 +24,39 @@ class Menu {
             };
         });
 
+        this.setClickEvent('undo', this.editor.undo.bind(this.editor));
+        this.setClickEvent('redo', this.editor.redo.bind(this.editor));
+        this.setClickEvent('play', () => {
+            this.util.playAudio(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum, this.bpm, this.beats));
+            this.bar.play();
+        });
+        this.setClickEvent('pause', this.bar.pause.bind(this.bar));
+        this.setClickEvent('stop', this.bar.stop.bind(this.bar));
+        this.setClickEvent('clear', this.editor.clear.bind(this.editor));
+        this.setClickEvent('remove', this.editor.remove.bind(this.editor));
+        this.setClickEvent('downloadWav', () => {
+            this.util.downloadWav(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum, this.bpm, this.beats));
+        });
+        this.setClickEvent('downloadScore', () => {
+            this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
+        });
+        this.setClickEvent('openScore', () => {
+            this.util.openScore().then((score) => {
+                this.editor.setScore(score);
+            }).catch((e) => {
+                alert(e);
+            });
+        });
+        this.setClickEvent('updateBpm', () => {
+            const bpm = this.bpm = Math.min(400, Math.max(20, (parseFloat(document.getElementById('bpm_in').value) || this.bpm)));
+            document.getElementById('bpm').innerHTML = bpm.toFixed(2);
+            this.bar.updateBpm(bpm);
+        });
+        /*
         document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
         document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
         document.getElementById('play').onclick = () => {
-            const audioData = [];
-            for (var i = 0; i < 44100 * 2; i++) {
-                audioData.push(Math.floor(Math.sin(Math.PI * 2 * i / 44100 * 440) * 128 + 128));
-            }
-            this.util.playAudio(audioData);
+            this.util.playAudio(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum));
             this.bar.play();
         }
         document.getElementById('pause').onclick = this.bar.pause.bind(this.bar);
@@ -38,11 +64,7 @@ class Menu {
         document.getElementById('clear').onclick = this.editor.clear.bind(this.editor);
         document.getElementById('remove').onclick = () => this.editor.remove(false);
         document.getElementById('downloadWav').onclick = () => {
-            const audioData = [];
-            for (var i = 0; i < 44100 * 2; i++) {
-                audioData.push(Math.floor(Math.sin(Math.PI * 2 * i / 44100 * 440) * 128 + 128));
-            }
-            this.util.downloadWav(audioData);
+            this.util.downloadWav(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum));
         }
         document.getElementById('downloadScore').onclick = () => {
             this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
@@ -55,11 +77,11 @@ class Menu {
             });
         }
         document.getElementById('updateBpm').onclick = () => {
-            const bpm = this.bpm = parseInt(document.getElementById('bpm').value, 10) || this.bpm;
-            document.getElementById('bpm').value = bpm;
+            const bpm = this.bpm = Math.min(400, Math.max(20, (parseFloat(document.getElementById('bpm_in').value) || this.bpm)));
+            document.getElementById('bpm').innerHTML = bpm.toFixed(2);
             this.bar.updateBpm(bpm);
         }
-
+        */
         //ToDo:もう少し綺麗に記述できそう
         document.querySelectorAll('.zoom').forEach((button, index) => {
             const id = button.id;
@@ -87,6 +109,14 @@ class Menu {
                 }
             }
         });
+    }
+
+    setFunction(func) {
+        this.world.setFunction(func);
+    }
+
+    setClickEvent(id, func) {
+        document.getElementById(id).onclick = func;
     }
 
     resize() {
