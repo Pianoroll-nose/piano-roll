@@ -23,6 +23,11 @@
 
 <body onload="start()" oncontextmenu="return false;">
     <div id="container">
+        <div id="input_parameter" class="none">
+            <input type="number" class="parameter">
+            <button id="set">ok</button>
+            <button id="close">close</button>
+        </div>
         <div id="menu-container">
             <ul class="menu">
                 <li>
@@ -120,14 +125,17 @@
                 <button id="clear">clear</button>
             </div>
         </div>
+        <!--
         <div id="bar-container">
             <canvas id="bar" width="3000px"></canvas>
         </div>
+        -->
         <div id="piano-container">
             <canvas id="piano" height="1000px"></canvas>
         </div>
         <div id="editor-container">
             <canvas id="background" width="3000px" height="1000px"></canvas>
+            <canvas id="bar" width="3000px" height="1000px"></canvas>
             <canvas id="score" width="3000px" height="1000px"></canvas>
         </div>
     </div>

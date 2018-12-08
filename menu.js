@@ -8,6 +8,7 @@ class Menu {
         this.verticalNum = 24;
         this.basePitch = 'C4';
         this.beats = 4;     //1小節に何拍あるか
+        this.mSeconds = 0;
         this.bpm = 120;
         this.mode = 1;
 
@@ -52,36 +53,11 @@ class Menu {
             document.getElementById('bpm').innerHTML = bpm.toFixed(2);
             this.bar.updateBpm(bpm);
         });
-        /*
-        document.getElementById('undo').onclick = this.editor.undo.bind(this.editor);
-        document.getElementById('redo').onclick = this.editor.redo.bind(this.editor);
-        document.getElementById('play').onclick = () => {
-            this.util.playAudio(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum));
-            this.bar.play();
-        }
-        document.getElementById('pause').onclick = this.bar.pause.bind(this.bar);
-        document.getElementById('stop').onclick = this.bar.stop.bind(this.bar);
-        document.getElementById('clear').onclick = this.editor.clear.bind(this.editor);
-        document.getElementById('remove').onclick = () => this.editor.remove(false);
-        document.getElementById('downloadWav').onclick = () => {
-            this.util.downloadWav(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum));
-        }
-        document.getElementById('downloadScore').onclick = () => {
-            this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
-        }
-        document.getElementById('openScore').onclick = () => {
-            this.util.openScore().then((score) => {
-                this.editor.setScore(score);
-            }).catch((e) => {
-                alert(e);
-            });
-        }
-        document.getElementById('updateBpm').onclick = () => {
-            const bpm = this.bpm = Math.min(400, Math.max(20, (parseFloat(document.getElementById('bpm_in').value) || this.bpm)));
-            document.getElementById('bpm').innerHTML = bpm.toFixed(2);
-            this.bar.updateBpm(bpm);
-        }
-        */
+
+        document.querySelectorAll('.parameters').forEach((e) => {
+            e.onclick = () => this.showInputDialog(e);
+        });
+
         //ToDo:もう少し綺麗に記述できそう
         document.querySelectorAll('.zoom').forEach((button, index) => {
             const id = button.id;
@@ -117,6 +93,65 @@ class Menu {
 
     setClickEvent(id, func) {
         document.getElementById(id).onclick = func;
+    }
+
+    showInputDialog(e) {
+        const className = e.firstElementChild.innerHTML.toLowerCase();
+        const input_num = {
+            'seconds': 3,
+            'tempo': 1,
+            'beat': 2
+        };
+        const div = document.getElementById('input_parameter');
+        div.className = className;
+        document.querySelectorAll('.parameter').forEach(e => e.parentNode.removeChild(e));
+        
+        for(let i = 0; i < input_num[className]; i++) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'parameter';
+            div.insertBefore(input, div.firstElementChild);
+        }
+        const close = document.getElementById('close');
+        const set = document.getElementById('set');
+
+        close.onclick = () => {
+            div.className = 'none';
+        }
+
+        set.onclick = () => {
+            const parameters = document.querySelectorAll('.parameter');
+            const funcs = {
+                'seconds': this.updateSeconds,
+                'tempo': this.updateBpm,
+                'beat': this.updateBeat                
+            };
+            e.lastElementChild.innerHTML = funcs[className].bind(this)(...Array.prototype.map.call(parameters, p => p.value));
+        }
+    }
+
+    updateBpm(value){
+        this.bpm = Math.min(400, Math.max(20, (parseFloat(value) || this.bpm)));
+        this.bar.updateBpm(bpm);
+        return this.bpm.toFixed(2);
+    }
+
+    updateSeconds(_min, _sec, _mSec){
+        const max = this.measureNum / this.bpm * 60 * 1000;
+        const min = (parseInt(_min) || 0) + Math.floor(_sec / 60);
+        const sec = _sec % 60;
+        const mSec = parseInt(_mSec.substr(0, 4)) / 10 || 0;
+
+        this.mSeconds = Math.min(max, Math.max(0, (parseFloat((min*60+sec)*1000 + mSec) || this.mSeconds)));
+        this.bar.updateSeconds(this.mSeconds);
+
+        const disp_min = ('000'+(Math.floor(this.mSeconds / (1000 * 60)))).slice(-3);
+        const disp_sec = ('00'+ Math.floor(this.mSeconds / 1000) % 100 % 60).slice(-2);
+        const disp_mSec = (this.mSeconds*10%10000+'0000').substr(0, 4);
+        return disp_min + ':' + disp_sec + '.' + disp_mSec;
+    }
+
+    updateBeat(denom, numerator){
     }
 
     resize() {

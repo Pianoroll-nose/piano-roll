@@ -1,8 +1,6 @@
 class Bar {
     constructor(bpm, horizontalNum, beats) {
-        this.container = document.getElementById("bar-container");
         this.canvas = document.getElementById("bar");
-        this.audio = document.getElementById("audio");
         this.ctx = this.canvas.getContext("2d");
         this.bpm = bpm;
         this.horizontalNum = horizontalNum;
@@ -21,13 +19,13 @@ class Bar {
         const startX = this.x;
         
         const animation = () => {
-            this.drawTriangle();
+            this.drawBar();
 
             const currentTime = performance.now();
 
             if(this.x > this.areaWidth) {
                 this.x = 0;
-                this.drawTriangle();
+                this.drawBar();
                 this.cancelAnimation();
             }
             else {
@@ -50,7 +48,7 @@ class Bar {
         this.x = 0;
         this.cancelAnimation();
 
-        this.drawTriangle();
+        this.drawBar();
     }
 
     cancelAnimation() {
@@ -63,6 +61,17 @@ class Bar {
         this.bpm = bpm;
     }
 
+    updateSeconds(mSec) {
+        this.x = mSec / 60 / 1000 * this.bpm * this.beats * this.cellWidth;
+        this.drawBar();
+    }
+
+    drawBar() {
+        this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
+        this.ctx.fillStyle = "green";
+        this.ctx.fillRect(this.x, 0, 2, this.areaHeight);
+    }
+    /*
     drawTriangle() {
         const triangleWidth = this.areaWidth / 200;
         const triangleHeight = this.areaHeight;
@@ -81,11 +90,11 @@ class Bar {
         this.ctx.fill();
 
     }
-
+    */
     resize() {
         this.areaWidth = this.canvas.clientWidth;
         this.areaHeight = this.canvas.clientHeight;
-        this.drawTriangle();
+        this.drawBar();
         this.stop();
     }
 }

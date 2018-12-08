@@ -4,7 +4,7 @@ function start(){
     let eContainer = document.getElementById("editor-container");
     //canvasの幅をdivの幅に揃える
     document.getElementById('piano').width = pContainer.clientWidth;
-    document.getElementById('bar').height = bContainer.clientHeight;
+    //document.getElementById('bar').height = bContainer.clientHeight;
 
     //スクロールを合わせる
     pContainer.addEventListener('scroll', () => {
@@ -14,7 +14,7 @@ function start(){
     eContainer.addEventListener('scroll', () => {
         pContainer.scrollTop = eContainer.scrollTop;
     });
-
+/*
     bContainer.addEventListener('scroll', () => {
         eContainer.scrollLeft = bContainer.scrollLeft;
     });
@@ -22,7 +22,7 @@ function start(){
     eContainer.addEventListener('scroll', () => {
         bContainer.scrollLeft = eContainer.scrollLeft;
     });
-
+*/
     const menu = new Menu();
 
     const setFunc = () => {

@@ -211,6 +211,7 @@ class World {
 
         out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
         const result = new Float64Array(out_heap.buffer, out_heap.byteOffset, out_length);
+
         Module._free(f0_heap.byteOffset);
         Module._free(sp_heap.byteOffset);
         Module._free(sp_pointers_heap.byteOffset);
@@ -225,9 +226,9 @@ class World {
         const src = this.audioCtx.createBufferSource();
         src.buffer = buffer;
         src.connect(this.audioCtx.destination);
-        //src.start();
-        
-        return audio;
+        src.start();
+//        return audio;
+        return [];
     }
 
 }
