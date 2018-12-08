@@ -1,5 +1,6 @@
 class Bar {
     constructor(bpm, horizontalNum, beats) {
+        this.disp = document.querySelector('.parameters').lastElementChild;
         this.canvas = document.getElementById("bar");
         this.ctx = this.canvas.getContext("2d");
         this.bpm = bpm;
@@ -12,27 +13,36 @@ class Bar {
         this.x = 0;
     }
 
-    play() {
-        if(this.id !== null)    this.cancelAnimation();
+    play(ctx, src, mSec) {
+        if (this.id !== null) {
+            this.x = 0;
+            this.cancelAnimation();
+        }
 
-        const startTime = performance.now();
+        src.start(ctx.currentTime, mSec / 1000);
+
+        const startTime = ctx.currentTime;
         const startX = this.x;
-        
+
         const animation = () => {
             this.drawBar();
 
-            const currentTime = performance.now();
+            const currentTime = ctx.currentTime;
 
-            if(this.x > this.areaWidth) {
-                this.x = 0;
-                this.drawBar();
-                this.cancelAnimation();
+            if (this.x > this.areaWidth) {
+                this.stop();
             }
             else {
-                const diffMin = (currentTime - startTime) / 1000 / 60;   //ms->s->m
+                const diff = currentTime - startTime;
+                const diffMin = diff / 60;//s->m
+                const diffSec = diff % 60;
+                const diffMSec = diff * 100000 % 10000; //4桁表示
                 this.x = startX + diffMin * this.bpm * this.beats * this.cellWidth;
-                
-                this.id = requestAnimationFrame(animation);    
+                this.disp.innerHTML =
+                    ('000' + Math.floor(diffMin)).slice(-3) + ':' +
+                    ('00' + Math.floor(diffSec)).slice(-2) + '.' +
+                    (Math.floor(diffMSec) + '0000').substr(0, 4);
+                this.id = requestAnimationFrame(animation);
 
             }
         };
@@ -47,7 +57,7 @@ class Bar {
     stop() {
         this.x = 0;
         this.cancelAnimation();
-
+        this.disp.innerHTML = '000:00.0000';
         this.drawBar();
     }
 
@@ -56,7 +66,7 @@ class Bar {
         this.id = null;
     }
 
-    updateBpm(bpm) { 
+    updateBpm(bpm) {
         this.stop();
         this.bpm = bpm;
     }

@@ -150,11 +150,11 @@ class World {
         return 1000 * 60 * length / (bpm * beats); 
     }
 
-    synthesis(score, basePitch, verticalNum, bpm, beats) {
+    synthesis(score, basePitch, verticalNum, bpm, beats, ctx) {
         console.time('score2Buf');
         const [f0, sp, ap] = this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
         console.timeEnd('score2Buf');
-        if (f0.length === 0) return [];
+        if (f0.length === 0) return null;
         console.time('heap');
 
         const f0_length = f0.length;
@@ -221,14 +221,12 @@ class World {
 
         const audio = Array.from(result);
 
-        const buffer = this.audioCtx.createBuffer(1, result.length, this.fs);
+        const buffer = ctx.createBuffer(1, result.length, this.fs);
         buffer.copyToChannel(new Float32Array(audio), 0);
-        const src = this.audioCtx.createBufferSource();
+        const src = ctx.createBufferSource();
         src.buffer = buffer;
-        src.connect(this.audioCtx.destination);
-        src.start();
-//        return audio;
-        return [];
+        src.connect(ctx.destination);
+        return src;
     }
 
 }

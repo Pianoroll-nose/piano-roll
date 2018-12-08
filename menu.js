@@ -1,5 +1,4 @@
 
-//Menuバーのイベントから他のクラスに処理を促すクラス
 class Menu {
     constructor() {
         this.notesPerMeasure = 4;
@@ -11,6 +10,7 @@ class Menu {
         this.mSeconds = 0;
         this.bpm = 120;
         this.mode = 1;
+        this.audioCtx = new AudioContext();
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);
@@ -28,8 +28,9 @@ class Menu {
         this.setClickEvent('undo', this.editor.undo.bind(this.editor));
         this.setClickEvent('redo', this.editor.redo.bind(this.editor));
         this.setClickEvent('play', () => {
-            this.util.playAudio(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum, this.bpm, this.beats));
-            this.bar.play();
+            const src = this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+                this.bpm, this.beats, this.audioCtx);
+            if(src !== null)    this.bar.play(this.audioCtx, src, this.mSeconds);
         });
         this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
@@ -105,8 +106,8 @@ class Menu {
         const div = document.getElementById('input_parameter');
         div.className = className;
         document.querySelectorAll('.parameter').forEach(e => e.parentNode.removeChild(e));
-        
-        for(let i = 0; i < input_num[className]; i++) {
+
+        for (let i = 0; i < input_num[className]; i++) {
             const input = document.createElement('input');
             input.type = 'number';
             input.className = 'parameter';
@@ -124,34 +125,34 @@ class Menu {
             const funcs = {
                 'seconds': this.updateSeconds,
                 'tempo': this.updateBpm,
-                'beat': this.updateBeat                
+                'beat': this.updateBeat
             };
             e.lastElementChild.innerHTML = funcs[className].bind(this)(...Array.prototype.map.call(parameters, p => p.value));
         }
     }
 
-    updateBpm(value){
+    updateBpm(value) {
         this.bpm = Math.min(400, Math.max(20, (parseFloat(value) || this.bpm)));
         this.bar.updateBpm(bpm);
         return this.bpm.toFixed(2);
     }
 
-    updateSeconds(_min, _sec, _mSec){
+    updateSeconds(_min, _sec, _mSec) {
         const max = this.measureNum / this.bpm * 60 * 1000;
         const min = (parseInt(_min) || 0) + Math.floor(_sec / 60);
         const sec = _sec % 60;
         const mSec = parseInt(_mSec.substr(0, 4)) / 10 || 0;
 
-        this.mSeconds = Math.min(max, Math.max(0, (parseFloat((min*60+sec)*1000 + mSec) || this.mSeconds)));
+        this.mSeconds = Math.min(max, Math.max(0, (parseFloat((min * 60 + sec) * 1000 + mSec) || this.mSeconds)));
         this.bar.updateSeconds(this.mSeconds);
 
-        const disp_min = ('000'+(Math.floor(this.mSeconds / (1000 * 60)))).slice(-3);
-        const disp_sec = ('00'+ Math.floor(this.mSeconds / 1000) % 100 % 60).slice(-2);
-        const disp_mSec = (this.mSeconds*10%10000+'0000').substr(0, 4);
+        const disp_min = ('000' + (Math.floor(this.mSeconds / (1000 * 60)))).slice(-3);
+        const disp_sec = ('00' + Math.floor(this.mSeconds / 1000) % 100 % 60).slice(-2);
+        const disp_mSec = (this.mSeconds * 10 % 10000 + '0000').substr(0, 4);
         return disp_min + ':' + disp_sec + '.' + disp_mSec;
     }
 
-    updateBeat(denom, numerator){
+    updateBeat(denom, numerator) {
     }
 
     resize() {

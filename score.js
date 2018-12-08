@@ -1,4 +1,3 @@
-//打ち込まれた内部データを処理するクラス
 class Score {
     constructor(horizontalNum, verticalNum) {
         this.canvas = document.getElementById("score");
