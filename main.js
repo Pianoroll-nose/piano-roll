@@ -1,33 +1,12 @@
-function start(){
-    let bContainer = document.getElementById("bar-container");
-    let pContainer = document.getElementById("piano-container");
-    let eContainer = document.getElementById("editor-container");
-    //canvasの幅をdivの幅に揃える
-    document.getElementById('piano').width = pContainer.clientWidth;
-    //document.getElementById('bar').height = bContainer.clientHeight;
-
-    //スクロールを合わせる
-    pContainer.addEventListener('scroll', () => {
-        eContainer.scrollTop = pContainer.scrollTop;
-    });
-
-    eContainer.addEventListener('scroll', () => {
-        pContainer.scrollTop = eContainer.scrollTop;
-    });
-/*
-    bContainer.addEventListener('scroll', () => {
-        eContainer.scrollLeft = bContainer.scrollLeft;
-    });
-
-    eContainer.addEventListener('scroll', () => {
-        bContainer.scrollLeft = eContainer.scrollLeft;
-    });
-*/
-    const menu = new Menu();
+function start() {
+    const scroll = new Scroll();
+    this.menu = new Menu();
 
     const setFunc = () => {
-        if(isInstantiated)  
-            menu.setFunction(Module.cwrap('synthesis', null, ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']));
+        if (isInstantiated) {
+            menu.setFunction(Module.cwrap('synthesis', null, ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']),
+                Module.cwrap('my_mgc2sp', null, ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']));
+        }
         else {
             setTimeout(setFunc, 300);
         }
@@ -35,13 +14,13 @@ function start(){
     setFunc();
 
     //画面のリサイズ処理の登録
-    (function(){
+    (function () {
         let timeout;
         window.onresize = () => {
             clearTimeout(timeout);
 
             timeout = setTimeout(() => {
-                document.getElementById('piano').width = pContainer.clientWidth;
+                document.getElementById('piano').width = document.getElementById('piano-container').clientWidth;
                 menu.resize();
             }, 100);
         }

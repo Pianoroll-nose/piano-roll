@@ -17,10 +17,13 @@ class Piano {
     draw() {
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
 
-        this.ctx.strokeStyle = "black";
-        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight);
-
         const pianoCellHeight = this.areaHeight / this.verticalNum;
+
+        this.ctx.strokeStyle = "black";
+        this.ctx.font = pianoCellHeight / 3 + "px Arial";
+        this.ctx.textBaseline = "middle";
+
+        this.ctx.strokeRect(0, 0, this.areaWidth, this.areaHeight);
 
         for(let h = 0; h <= this.areaHeight; h += pianoCellHeight){
             this.ctx.strokeStyle = "gray";
@@ -42,7 +45,7 @@ class Piano {
             this.ctx.fillRect(0, pianoCellHeight * (8 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
             this.ctx.fillRect(0, pianoCellHeight * (10 + 12 * (octave - 1 - o)), this.areaWidth * 2 / 3, pianoCellHeight);
 
-            this.ctx.fillText("C" + String(this.baseOctave + o), this.areaWidth * 3 / 4,  pianoCellHeight * (11 + 12 * (octave - 1 - o)) + 25);
+            this.ctx.fillText("C" + String(this.baseOctave + o), this.areaWidth * 3 / 4,  pianoCellHeight * (12 * (octave - o)) - pianoCellHeight / 2, this.areaWidth / 4);
         }
     }
 }

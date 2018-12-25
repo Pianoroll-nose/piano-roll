@@ -26,6 +26,10 @@ button:active{
     background-color: cyan;
 }
 
+div::-webkit-scrollbar {
+    display: none;
+  }
+
 #container{
     width: 99vw;
     height: 99vh;
@@ -36,15 +40,15 @@ button:active{
     left: 0;
     margin: auto;
     display: grid;
-    grid-template-rows: 4vh 10vh 1fr 20fr;
-    grid-template-columns: 19% 80%;
-    grid-column-gap: 1%;
-    grid-row-gap: 1%;
+    grid-template-rows: 4vh 10vh 1fr 20fr 20px;
+    grid-template-columns: 19% 1fr 20px;
+    grid-column-gap: 5px;
+    grid-row-gap: 5px;
 }
 
 #menu-container{
     grid-row: 1;
-    grid-column: 1 / 3;
+    grid-column: 1 / 4;
 }
 
 .menu{
@@ -87,21 +91,20 @@ button:active{
     overflow: hidden;
 }
 
-.menu > li:hover{
-    /*
-    background-color: aliceblue;
-    */
-}
 
 .menu > li:hover > ul > li{
     width: 100%;
     padding: 0px;
     list-style: none;
-    transition: .2s;
     border: solid 1px #000000;
     border-bottom: none;
-    background-color: aliceblue;
+    background-color: white;
     height: auto;
+    transition: .2s;
+}
+
+.menu > li:hover > ul > li:hover{
+    background-color: aliceblue;
 }
 
 .menu > li:hover > ul > li:last-child{
@@ -113,7 +116,7 @@ button:active{
     flex-direction: row;
     justify-content: space-around;
     grid-row: 2;
-    grid-column: 1 / 3;
+    grid-column: 1 / 4;
     height: 100%;
     border: solid 1px #000000;
 }
@@ -171,11 +174,11 @@ button:active{
 }
 
 .tempo{
-    display: inline;
+    display: block;
 }
 
 .beats{
-    display: inline;
+    display: block;
 }
 
 .mode input[type="radio"]:checked + label{
@@ -191,7 +194,7 @@ button:active{
 
 #track-container {
     grid-row: 3;
-    grid-column: 1 / 3;
+    grid-column: 1 / 4;
     min-height: 10vh;
     max-height: 40vh;
     height: 25vh;
@@ -200,18 +203,11 @@ button:active{
     overflow: scroll;
 }
 
-#bar-container{
-    grid-row: 4;
-    grid-column: 2;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    border-bottom: 1px solid #999999;
-}
-
-
 #piano-container{
     grid-row: 4;
     grid-column: 1;
+    margin-bottom: -20px;
+    padding-bottom: 20px;
     overflow-y: scroll;
     overflow-x: hidden;
     position: relative;
@@ -220,20 +216,84 @@ button:active{
 #editor-container{
     grid-row: 4;
     grid-column: 2;
+    display: block;
+    margin-right: -20px;
+    padding-right: 20px;
+    margin-bottom: -20px;
+    padding-bottom: 20px;
     overflow: scroll;
     position: relative;
 }
 
+#v-scroll{
+    grid-row: 4;
+    grid-column: 3;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    overflow-y: hidden;
+    background-color: white;
+    position: relative;
+    border: solid 1px black;
+}
+#v-thumb {
+    width: 80%;
+    height: 20%;
+    z-index: 3;
+    left: 10%;
+    position: relative;
+    border-radius: 2px;
+    background-color: rgba(150, 150, 150, 0.7);
+}
+
+#v-thumb:hover{
+    background-color: rgb(150, 150, 150);
+}
+
+#h-scroll{
+    grid-row: 5;
+    grid-column: 2;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    overflow-x: hidden; 
+    background-color: white;
+    position: relative;
+    border: solid 1px black;
+}
+
+#h-thumb{ 
+    width: 20%;
+    height: 80%;
+    top: 10%;
+    z-index: 3;
+    position: relative;
+    border-radius: 2px;
+    background-color: rgba(150, 150, 150, 0.7);
+}
+
+#h-thumb:hover{
+    background-color: rgb(150, 150, 150);
+}
+
 #piano{
     position: absolute;
+    margin-bottom: calc(30px - 1vh);
     border-bottom: 1px solid #999999;
+}
+
+#canvas-container {
+    position: relative;
+    width: calc(3000px + 20px);
+    height: 1000px;
 }
 
 #bar{
     position: absolute;
-    z-index: 1;
     pointer-events: none;
+    z-index: 1;
 }
+
 #score{
     position: absolute;
 }

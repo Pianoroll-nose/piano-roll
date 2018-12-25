@@ -8,7 +8,10 @@
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU"
         crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/css/perfect-scrollbar.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/perfect-scrollbar.min.js"></script>
     <script src="synthesis.js"></script>
+    <script src="scroll.js"></script>
     <script src="main.js"></script>
     <script src="menu.js"></script>
     <script src="util.js"></script>
@@ -33,14 +36,27 @@
                 <li>
                     ファイル
                     <ul>
-                        <li>a</li>
-                        <li>b</li>
                     </ul>
                 </li>
-                <li>menu2
+                <li>編集
                     <ul>
-                        <li>a</li>
-                        <li>b</li>
+                        <li id="undo">undo</li>
+                        <li id="redo">redo</li>
+                        <li>切り取り</li>
+                        <li>コピー</li>
+                        <li>貼り付け</li>
+                        <li id="remove">削除</li>
+                        <li>全て選択</li>
+                    </ul>
+                </li>
+                <li>表示
+                    <ul>
+                    </ul>
+                </li>
+                <li>トラック
+                    <ul>
+                        <li>トラックを追加</li>
+                        <li>トラックを削除</li>
                     </ul>
                 </li>
             </ul>
@@ -134,10 +150,22 @@
             <canvas id="piano" height="1000px"></canvas>
         </div>
         <div id="editor-container">
-            <canvas id="background" width="3000px" height="1000px"></canvas>
-            <canvas id="bar" width="3000px" height="1000px"></canvas>
-            <canvas id="score" width="3000px" height="1000px"></canvas>
+            <div id="canvas-container">
+                <canvas id="background" width="3000px" height="1000px"></canvas>
+                <canvas id="bar" width="3000px" height="1000px"></canvas>
+                <canvas id="score" width="3000px" height="1000px"></canvas>
+            </div>
         </div>
+        <div style="grid-row: 5; grid-column: 1; height: 20px; background-color: white; z-index: 2;"></div>
+        <div id="v-scroll">
+            <div id="v-thumb">
+            </div>
+        </div>
+        <div id="h-scroll">
+            <div id="h-thumb">
+            </div>
+        </div>
+
     </div>
 </body>
 

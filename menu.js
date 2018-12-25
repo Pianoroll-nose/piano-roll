@@ -10,6 +10,7 @@ class Menu {
         this.mSeconds = 0;
         this.bpm = 120;
         this.mode = 1;
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
         this.audioCtx = new AudioContext();
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
@@ -28,16 +29,26 @@ class Menu {
         this.setClickEvent('undo', this.editor.undo.bind(this.editor));
         this.setClickEvent('redo', this.editor.redo.bind(this.editor));
         this.setClickEvent('play', () => {
-            const src = this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-                this.bpm, this.beats, this.audioCtx);
-            if(src !== null)    this.bar.play(this.audioCtx, src, this.mSeconds);
+            const buf = this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+                this.bpm, this.beats);
+            if (buf.length > 0) {
+                const buffer = this.audioCtx.createBuffer(1, buf.length, 44100);
+                buffer.copyToChannel(new Float32Array(buf), 0);
+                const src = this.audioCtx.createBufferSource();
+                src.buffer = buffer;
+                src.connect(this.audioCtx.destination);
+
+                this.bar.play(this.audioCtx, src, this.mSeconds);
+                this.mSeconds = 0;
+            }
         });
         this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
         this.setClickEvent('clear', this.editor.clear.bind(this.editor));
         this.setClickEvent('remove', this.editor.remove.bind(this.editor));
         this.setClickEvent('downloadWav', () => {
-            this.util.downloadWav(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum, this.bpm, this.beats));
+            this.util.downloadWav(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+                this.bpm, this.beats));
         });
         this.setClickEvent('downloadScore', () => {
             this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
@@ -63,33 +74,37 @@ class Menu {
         document.querySelectorAll('.zoom').forEach((button, index) => {
             const id = button.id;
             const addOrSub = (id, value) => (id.endsWith('up')) ? value + 100 : value - 100;
+            const container = document.getElementById('canvas-container');
             if (id.startsWith('w')) {
                 button.onclick = () => {
                     const elements = document.querySelectorAll('canvas:not(#piano)');
+                    container.style.width = Math.max(2000, Math.min(6000, addOrSub(id, container.clientWidth))) + "px";
                     elements.forEach((element, index) => {
                         //2000px以上6000px以下
                         element.width = Math.max(2000, Math.min(6000, addOrSub(id, element.width)));
-                    })
+                    });
                     this.editor.resize();
                     this.bar.resize();
                 }
             }
             else {
                 button.onclick = () => {
-                    const elements = document.querySelectorAll('canvas:not(#bar)');
+                    const elements = document.querySelectorAll('canvas');
+                    container.style.height = Math.max(500, Math.min(3000, addOrSub(id, container.clientHeight))) + "px";
                     elements.forEach((element, index) => {
                         //500px以上3000px以下
                         element.height = Math.max(500, Math.min(3000, addOrSub(id, element.height)));
-                    })
+                    });
                     this.editor.resize();
+                    this.bar.resize();
                     this.piano.resize();
                 }
             }
         });
     }
 
-    setFunction(func) {
-        this.world.setFunction(func);
+    setFunction(syn, mgc) {
+        this.world.setFunction(syn, mgc);
     }
 
     setClickEvent(id, func) {
@@ -103,12 +118,23 @@ class Menu {
             'tempo': 1,
             'beat': 2
         };
+        const tags = {
+            'seconds': ['', '.', ':'],
+            'tempo': [],
+            'beat': ['', '/']
+        }
         const div = document.getElementById('input_parameter');
         div.className = className;
         document.querySelectorAll('.parameter').forEach(e => e.parentNode.removeChild(e));
 
         for (let i = 0; i < input_num[className]; i++) {
-            const input = document.createElement('input');
+/*            if(i > 0){
+                const p = document.createElement('span');
+                p.innerHTML = tags[className][i];
+                p.className = 'symbol';
+                div.insertBefore(p, div.firstElementChild);
+            }
+*/          const input = document.createElement('input');
             input.type = 'number';
             input.className = 'parameter';
             div.insertBefore(input, div.firstElementChild);
@@ -131,9 +157,27 @@ class Menu {
         }
     }
 
+    insertElement(div, parameter) {
+        const tags = {
+            'seconds': [':', '.'],
+            'tempo': [],
+            'beat': ['.']
+        }
+        switch (parameter) {
+            case 'seconds':
+                for (let i = 0; i < input_num[className]; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'parameter';
+                    div.insertBefore(input, div.firstElementChild);
+
+                }
+        }
+    }
+
     updateBpm(value) {
         this.bpm = Math.min(400, Math.max(20, (parseFloat(value) || this.bpm)));
-        this.bar.updateBpm(bpm);
+        this.bar.updateBpm(this.bpm);
         return this.bpm.toFixed(2);
     }
 

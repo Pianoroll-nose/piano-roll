@@ -2,12 +2,14 @@ class Bar {
     constructor(bpm, horizontalNum, beats) {
         this.disp = document.querySelector('.parameters').lastElementChild;
         this.canvas = document.getElementById("bar");
+        this.container = document.getElementById('editor-container');
         this.ctx = this.canvas.getContext("2d");
         this.bpm = bpm;
         this.horizontalNum = horizontalNum;
         this.beats = beats;
         this.cellWidth = this.canvas.clientWidth / horizontalNum;
         this.id = null;
+        this.src = null;
         this.resize();
 
         this.x = 0;
@@ -19,10 +21,10 @@ class Bar {
             this.cancelAnimation();
         }
 
-        src.start(ctx.currentTime, mSec / 1000);
-
-        const startTime = ctx.currentTime;
+        this.src = src;
         const startX = this.x;
+        const startTime = ctx.currentTime;
+        src.start(ctx.currentTime, mSec / 1000);
 
         const animation = () => {
             this.drawBar();
@@ -43,7 +45,7 @@ class Bar {
                     ('00' + Math.floor(diffSec)).slice(-2) + '.' +
                     (Math.floor(diffMSec) + '0000').substr(0, 4);
                 this.id = requestAnimationFrame(animation);
-
+                this.container.scrollLeft = this.x - this.containerWidth / 2;
             }
         };
 
@@ -59,6 +61,11 @@ class Bar {
         this.cancelAnimation();
         this.disp.innerHTML = '000:00.0000';
         this.drawBar();
+        if(this.src !== null){
+            this.src.stop();
+            this.src = null;
+        }
+        this.container.scrollLeft = 0;
     }
 
     cancelAnimation() {
@@ -81,29 +88,11 @@ class Bar {
         this.ctx.fillStyle = "green";
         this.ctx.fillRect(this.x, 0, 2, this.areaHeight);
     }
-    /*
-    drawTriangle() {
-        const triangleWidth = this.areaWidth / 200;
-        const triangleHeight = this.areaHeight;
 
-        this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
-        this.ctx.strokeStyle = "black";
-        this.ctx.strokeRect(0, 0, this.areaWidth, triangleHeight);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(this.x - triangleWidth, 0);
-        this.ctx.lineTo(this.x + triangleWidth, 0);
-        this.ctx.lineTo(this.x, triangleHeight);
-        this.ctx.closePath();
-
-        this.ctx.fillStyle = "green";
-        this.ctx.fill();
-
-    }
-    */
     resize() {
         this.areaWidth = this.canvas.clientWidth;
         this.areaHeight = this.canvas.clientHeight;
+        this.containerWidth = this.container.clientWidth;
         this.drawBar();
         this.stop();
     }

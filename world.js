@@ -23,41 +23,76 @@ class World {
         this.fft_size = Math.floor(Math.pow(2.0, 1.0 + Math.floor(Math.log(3.0 * this.fs / f0_floor + 1) / Math.log(2))));
         //world_parameters->fft_size / 2 + 1
         this.f_points = Math.floor(this.fft_size / 2) + 1;
+        this.mel_points = 10 + 1;
+        this.isLoaded = false;
 
-        this.audioCtx = new AudioContext();
         const load = async () => {
-            const parameter = ["f0", "ap", "sp"];
+            //const parameter = ["f0", "ap", "sp"];
+            const parameter = ["f0", "ap", "mgc"];
             for (let i = 0; i < this.soundIndex.length; i++) {
                 this.sounds[i] = {}
                 for (let p of parameter) {
                     const res = await fetch('http://localhost:5500/namine_ritsu_float/' + p + '/' + i + '.' + p);
-                    const [_, index, param] = res.url.match(/(\d+).(ap|sp|f0)/);
+                    const [_, index, param] = res.url.match(/(\d+).(ap|sp|f0|mgc)/);
                     const buf = await res.arrayBuffer();
                     let view = new DataView(buf);
 
                     let arr = new Float64Array(view.byteLength / 4);
                     arr.fill(0);
-                    for(let i = 0, l = view.byteLength / 4; i < l; i++) {
+                    for (let i = 0, l = view.byteLength / 4; i < l; i++) {
                         arr[i] = view.getFloat32(i * 4, true);  //リトルエンディアン
                     }
                     this.sounds[index][param] = arr;
                 }
             }
+            this.isLoaded = true;
         };
         load();
     }
 
-    setFunction(func) {
-        this._synthesis = func;
+    mgc2sp(index) {
+        const wait = () => {
+            if(!this.isLoaded)  setTimeout(wait, 300);
+            else {
+                //for(let index = 0; index < 1/*this.soundIndex.length*/; index++){
+                    const mgc_size = this.sounds[index]["mgc"].length * this.sounds[index]["mgc"].BYTES_PER_ELEMENT;
+                    const mgc_ptr = Module._malloc(mgc_size);
+                    let mgc_heap = new Uint8Array(Module.HEAPU8.buffer, mgc_ptr, mgc_size);
+                    mgc_heap.set(new Uint8Array(this.sounds[index]["mgc"].buffer));
+            
+                    const out = new Float64Array(this.sounds[index]["ap"].length);
+                    const out_size = out.length * out.BYTES_PER_ELEMENT;
+                    const out_ptr = Module._malloc(out_size);
+                    let out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
+                    out_heap.set(new Uint8Array(out.buffer));
+                    console.time('mgc2sp');
+                    this._mgc2sp(mgc_ptr, this.sounds[index]["mgc"].length, 10, this.fft_size, 3, 0.544, 0, 0, 0, 0, out_ptr)
+                    console.timeEnd('mgc2sp');
+                    out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
+                    const result = new Float64Array(out_heap.buffer, out_heap.byteOffset, out.length);
+                    this.sounds[index]["sp"] = new Float64Array(result);
+                    Module._free(mgc_heap.byteOffset);
+                    Module._free(out_heap.byteOffset);   
+                    delete this.sounds[index]["mgc"];
+                //}
+        
+            }
+        }
+        wait();
+    }
+
+    setFunction(syn, mgc) {
+        this._synthesis = syn;
+        this._mgc2sp = mgc;
     }
 
     scoreToBuffer(score, basePitch, verticalNum, bpm, beats) {
         let f0_len = 0, sp_len = 0, ap_len = 0;
         let lastIndex = 0;
         for (let s of score) {
-            let length = this.cellToMSeconds(bpm, beats, s.end-s.start+1);
-            if(s.start - lastIndex > 0) {
-                length += this.cellToMSeconds(bpm, beats, s.start-lastIndex);
+            let length = this.cellToMSeconds(bpm, beats, s.end - s.start + 1);
+            if (s.start - lastIndex > 0) {
+                length += this.cellToMSeconds(bpm, beats, s.start - lastIndex);
             }
             const time_len = Math.floor(length / this.frame_period);
             f0_len += time_len;
@@ -75,18 +110,19 @@ class World {
         let ap_offset = 0;
         lastIndex = 0;
         for (let s of score) {
-            if(s.start - lastIndex > 0) {
-                let length = this.cellToMSeconds(bpm, beats, s.start-lastIndex);
+            if (s.start - lastIndex > 0) {
+                let length = this.cellToMSeconds(bpm, beats, s.start - lastIndex);
                 length /= this.frame_period;
                 length = Math.floor(length);
                 f0_buf.set(Array(length).fill(0), f0_offset);
-                sp_buf.set(Array(length*this.f_points).fill(0), sp_offset);
-                ap_buf.set(Array(length*this.f_points).fill(0), ap_offset);
+                sp_buf.set(Array(length * this.f_points).fill(0), sp_offset);
+                ap_buf.set(Array(length * this.f_points).fill(0), ap_offset);
                 f0_offset += length;
                 sp_offset += length * this.f_points;
                 ap_offset += length * this.f_points;
             }
             const index = this.soundIndex.indexOf(s.lyric);
+            if(!this.sounds[index]["sp"])   this.mgc2sp(index);
             const _f0 = this.makePitch(this.sounds[index].f0, this.pitchToMidiNum(s.pitch, basePitch, verticalNum));
             const [f0, sp, ap] = this.alignLength(_f0, this.sounds[index].sp, this.sounds[index].ap, bpm, beats, s.end - s.start + 1);
             f0_buf.set(f0, f0_offset);
@@ -104,7 +140,7 @@ class World {
 
     makePitch(f0, pitch) {
         //元の信号のmidi番号を求める
-        const midi_num = Math.round(12 * (Math.log10(f0[Math.floor(f0.length/2)]+0.1) - Math.log10(440)) / Math.log10(2)) + 69;
+        const midi_num = Math.round(12 * (Math.log10(f0[Math.floor(f0.length / 2)] + 0.1) - Math.log10(440)) / Math.log10(2)) + 69;
         const diff = Math.pow(2, (pitch - midi_num) / 12);
         const _f0 = f0.map(n => n * diff);
         return _f0;
@@ -122,20 +158,20 @@ class World {
 
     alignLength(f0, sp, ap, bpm, beats, length) {
         const m_sec = this.cellToMSeconds(bpm, beats, length);
-        const times = m_sec / (f0.length * this.frame_period);
+        const times = (f0.length * this.frame_period) / m_sec;
         const f_points = sp.length / f0.length;
 
-        const time_length = Math.floor(f0.length * times);
+        const time_length = Math.floor((f0.length - 1) / times);
         const _f0 = new Float64Array(time_length);
         const _sp = new Float64Array(time_length * f_points);
         const _ap = new Float64Array(time_length * f_points);
 
-        for(let i = 0, len = _f0.length; i < len; i++){
-            const newIdx = i/times;
+        for (let i = 0, len = _f0.length; i < len; i++) {
+            const newIdx = i * times;
             const x = newIdx - Math.floor(newIdx);
-            for(let j = 0; j < f_points; j++){
-                _sp[i*f_points+j] = this.linear(sp[Math.floor(newIdx)*f_points+j], sp[Math.ceil(newIdx)*f_points+j], x);
-                _ap[i*f_points+j] = this.linear(ap[Math.floor(newIdx)*f_points+j], ap[Math.ceil(newIdx)*f_points+j], x);    
+            for (let j = 0; j < f_points; j++) {
+                _sp[i * f_points + j] = this.linear(sp[Math.floor(newIdx) * f_points + j], sp[Math.ceil(newIdx) * f_points + j], x);
+                _ap[i * f_points + j] = this.linear(ap[Math.floor(newIdx) * f_points + j], ap[Math.ceil(newIdx) * f_points + j], x);
             }
             _f0[i] = this.linear(f0[Math.floor(newIdx)], f0[Math.ceil(newIdx)], x);
         }
@@ -147,14 +183,14 @@ class World {
     }
 
     cellToMSeconds(bpm, beats, length) {
-        return 1000 * 60 * length / (bpm * beats); 
+        return 1000 * 60 * length / (bpm * beats);
     }
 
-    synthesis(score, basePitch, verticalNum, bpm, beats, ctx) {
+    synthesis(score, basePitch, verticalNum, bpm, beats) {
         console.time('score2Buf');
         const [f0, sp, ap] = this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
         console.timeEnd('score2Buf');
-        if (f0.length === 0) return null;
+        if (f0.length === 0) return [];
         console.time('heap');
 
         const f0_length = f0.length;
@@ -220,13 +256,7 @@ class World {
         Module._free(out_heap.byteOffset);
 
         const audio = Array.from(result);
-
-        const buffer = ctx.createBuffer(1, result.length, this.fs);
-        buffer.copyToChannel(new Float32Array(audio), 0);
-        const src = ctx.createBufferSource();
-        src.buffer = buffer;
-        src.connect(ctx.destination);
-        return src;
+        return audio;
     }
 
 }
