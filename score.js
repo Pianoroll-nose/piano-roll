@@ -64,7 +64,7 @@ class Score {
 
                 //歌詞の描画
                 this.ctx.fillStyle = "black";
-                this.ctx.fillText(s.lyric, left, top + this.cellHeight / 2, width);
+                this.ctx.fillText(s.lyric, left, top+this.cellHeight*0.6, width);
             }
         }
 
@@ -435,6 +435,29 @@ class Score {
                 x -= 10;
                 const xIndex = Math.floor(x / this.cellWidth);
                 move(xIndex - this.lastClicked.x, diffY, xIndex);
+                this.scrollId = setTimeout(scroll, 30);
+            }
+            scroll();
+        }
+
+        if ((this.mouseDown || this.isDragging) && y >= this.container.clientHeight) {
+            let y = e.clientY - can_rect.top;
+            const scroll = () => {
+                this.container.scrollTop += 10;
+                y += 10;
+                const yIndex = Math.floor(y / this.cellHeight);
+                move(diffX, yIndex - this.lastClicked.y, yIndex);
+                this.scrollId = setTimeout(scroll, 30);
+            }
+            scroll();
+        }
+        else if ((this.mouseDown || this.isDragging) && y <= 0) {
+            let y = e.clientY - can_rect.top;
+            const scroll = () => {
+                this.container.scrollTop -= 10;
+                y -= 10;
+                const yIndex = Math.floor(y / this.cellHeight);
+                move(diffX, yIndex - this.lastClicked.y, yIndex);
                 this.scrollId = setTimeout(scroll, 30);
             }
             scroll();

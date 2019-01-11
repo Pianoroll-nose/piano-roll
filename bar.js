@@ -7,7 +7,6 @@ class Bar {
         this.bpm = bpm;
         this.horizontalNum = horizontalNum;
         this.beats = beats;
-        this.cellWidth = this.canvas.clientWidth / horizontalNum;
         this.id = null;
         this.src = null;
         this.resize();
@@ -93,6 +92,7 @@ class Bar {
         this.areaWidth = this.canvas.clientWidth;
         this.areaHeight = this.canvas.clientHeight;
         this.containerWidth = this.container.clientWidth;
+        this.cellWidth = this.areaWidth / this.horizontalNum;
         this.drawBar();
         this.stop();
     }

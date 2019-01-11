@@ -6,12 +6,12 @@
     <title>PianoRoll</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU"
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
         crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/css/perfect-scrollbar.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.4.0/perfect-scrollbar.min.js"></script>
-    <script src="synthesis.js"></script>
+    <script src="sox.js"></script>
     <script src="scroll.js"></script>
+    <!--<script src="timeStretch.js"></script>-->
+    <script src="synthesis.js"></script>
     <script src="main.js"></script>
     <script src="menu.js"></script>
     <script src="util.js"></script>
@@ -26,16 +26,36 @@
 
 <body onload="start()" oncontextmenu="return false;">
     <div id="container">
+        <div id="download_dialog" class="none">
+            <div id="wav-container" class="none">
+                <input type="text" id="wavName" value="" placeholder="ファイル名を入力">
+                <button id="downloadWav">ダウンロード</button>
+            </div>
+            <div id="score-container" class="none">
+                <input type="text" id="scoreName" value="" placeholder="ファイル名を入力">
+                <button id="downloadScore">ダウンロード</button>
+            </div>
+            <button id="d_close">close</button>
+        </div>
         <div id="input_parameter" class="none">
             <input type="number" class="parameter">
             <button id="set">ok</button>
-            <button id="close">close</button>
+            <button id="p_close">close</button>
+        </div>
+        <div id="synthesis" class="none">
+            <div id="status">
+                <div></div>
+                <div></div>
+            </div>
         </div>
         <div id="menu-container">
             <ul class="menu">
                 <li>
                     ファイル
                     <ul>
+                        <li id="openScore">開く</li>
+                        <li id="d-score">譜面を保存</li>
+                        <li id="d-wav">音声を保存</li>
                     </ul>
                 </li>
                 <li>編集
@@ -51,6 +71,8 @@
                 </li>
                 <li>表示
                     <ul>
+                        <li id="width_default">横幅を初期化</li>
+                        <li id="height_default">縦幅を初期化</li>
                     </ul>
                 </li>
                 <li>トラック
@@ -86,7 +108,8 @@
                     <p>TEMPO</p>
                     <p id="bpm">120.00</p>
                 </div>
-                <div class="parameters">
+                <!--<div class="parameters">-->
+                <div>
                     <p>BEAT</p>
                     <p>4/4</p>
                 </div>
@@ -108,13 +131,13 @@
         </div>
         <div id="track-container">
             <div>
-                <audio id="audio"></audio>
+                <audio></audio>
                 <button id="pause">pause</button>
             </div>
             <div>
                 <div>
                     <input type="text" id="wavName" value="" placeholder="ファイル名を入力">
-                    <button id="downloadWav">download</button>
+                    <!--<button id="downloadWav">download</button>-->
                 </div>
                 <div>
                     <input type="text" id="scoreName" value="" placeholder="ファイル名を入力">
@@ -141,11 +164,6 @@
                 <button id="clear">clear</button>
             </div>
         </div>
-        <!--
-        <div id="bar-container">
-            <canvas id="bar" width="3000px"></canvas>
-        </div>
-        -->
         <div id="piano-container">
             <canvas id="piano" height="1000px"></canvas>
         </div>
@@ -157,15 +175,25 @@
             </div>
         </div>
         <div style="grid-row: 5; grid-column: 1; height: 20px; background-color: white; z-index: 2;"></div>
-        <div id="v-scroll">
-            <div id="v-thumb">
+        <div id="v-scroll-container">
+            <div id="v-scroll">
+                <div id="v-thumb"></div>
             </div>
+            <button id="h-up" class="zoom">+</button>
+            <button id="h-down" class="zoom">-</button>
+            <input type="range" name="h" id="h-value-in" min="10" max="200" step="10" value="100">
+            <output id="h-value-out">100%</output>
         </div>
-        <div id="h-scroll">
-            <div id="h-thumb">
+        <div id="h-scroll-container">
+            <div id="h-scroll">
+                <div id="h-thumb">
+                </div>
             </div>
+            <button id="w-up" class="zoom">+</button>
+            <button id="w-down" class="zoom">-</button>
+            <input type="range" name="w" id="w-value-in" min="10" max="200" step="10" value="100">
+            <output id="w-value-out">100%</output>
         </div>
-
     </div>
 </body>
 

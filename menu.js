@@ -19,6 +19,10 @@ class Menu {
         this.bar = new Bar(this.bpm, this.horizontalNum, this.beats);
         this.world = new World();
 
+        this.init();
+    }
+
+    init() {
         document.getElementsByName('mode').forEach((e) => {
             e.onchange = () => {
                 this.mode = modes[e.value];
@@ -29,26 +33,33 @@ class Menu {
         this.setClickEvent('undo', this.editor.undo.bind(this.editor));
         this.setClickEvent('redo', this.editor.redo.bind(this.editor));
         this.setClickEvent('play', () => {
-            const buf = this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-                this.bpm, this.beats);
-            if (buf.length > 0) {
-                const buffer = this.audioCtx.createBuffer(1, buf.length, 44100);
-                buffer.copyToChannel(new Float32Array(buf), 0);
-                const src = this.audioCtx.createBufferSource();
-                src.buffer = buffer;
-                src.connect(this.audioCtx.destination);
+            //sox.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+            //this.bpm, this.beats);
+            this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+                this.bpm, this.beats).then(buf => {
+                    if (buf.length > 0) {
+                        const buffer = this.audioCtx.createBuffer(1, buf.length, 44100);
+                        buffer.copyToChannel(new Float32Array(buf), 0);
+                        const src = this.audioCtx.createBufferSource();
+                        src.buffer = buffer;
+                        src.connect(this.audioCtx.destination);
 
-                this.bar.play(this.audioCtx, src, this.mSeconds);
-                this.mSeconds = 0;
-            }
+                        this.bar.play(this.audioCtx, src, this.mSeconds);
+                        this.mSeconds = 0;
+                    }
+                });
         });
         this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
         this.setClickEvent('clear', this.editor.clear.bind(this.editor));
         this.setClickEvent('remove', this.editor.remove.bind(this.editor));
+        this.setClickEvent('d-wav', () => this.showDownloadDialog('wav'));
+        this.setClickEvent('d-score', () => this.showDownloadDialog('score'));
         this.setClickEvent('downloadWav', () => {
-            this.util.downloadWav(this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-                this.bpm, this.beats));
+            this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+                this.bpm, this.beats).then(buf => {
+                    this.util.downloadWav(buf);
+                });
         });
         this.setClickEvent('downloadScore', () => {
             this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
@@ -73,34 +84,44 @@ class Menu {
         //ToDo:もう少し綺麗に記述できそう
         document.querySelectorAll('.zoom').forEach((button, index) => {
             const id = button.id;
-            const addOrSub = (id, value) => (id.endsWith('up')) ? value + 100 : value - 100;
+            const _default = {
+                'w': 3000,
+                'h': 1000
+            }
+            const addOrSub = (id, value) => Math.ceil(
+                (id.endsWith('up')) ? value + _default[id[0]] * 0.1 : value - _default[id[0]] * 0.1);
             const container = document.getElementById('canvas-container');
             if (id.startsWith('w')) {
                 button.onclick = () => {
-                    const elements = document.querySelectorAll('canvas:not(#piano)');
-                    container.style.width = Math.max(2000, Math.min(6000, addOrSub(id, container.clientWidth))) + "px";
-                    elements.forEach((element, index) => {
-                        //2000px以上6000px以下
-                        element.width = Math.max(2000, Math.min(6000, addOrSub(id, element.width)));
-                    });
-                    this.editor.resize();
-                    this.bar.resize();
+                    //this.setWidth(Math.max(2000, Math.min(6000, addOrSub(id, container.clientWidth - 20))));
+                    this.setWidth(Math.max(_default.w * 0.1, Math.min(_default.w * 2, addOrSub(id, container.clientWidth - 20))));
                 }
             }
             else {
                 button.onclick = () => {
-                    const elements = document.querySelectorAll('canvas');
-                    container.style.height = Math.max(500, Math.min(3000, addOrSub(id, container.clientHeight))) + "px";
-                    elements.forEach((element, index) => {
-                        //500px以上3000px以下
-                        element.height = Math.max(500, Math.min(3000, addOrSub(id, element.height)));
-                    });
-                    this.editor.resize();
-                    this.bar.resize();
-                    this.piano.resize();
+                    //this.setHeight(Math.max(500, Math.min(3000, addOrSub(id, container.clientHeight))));
+                    this.setHeight(Math.max(1000 * 0.1, Math.min(1000 * 2, addOrSub(id, container.clientHeight))));
                 }
             }
         });
+
+        this.setClickEvent('width_default', () => {
+            this.setWidth(3000);
+        });
+
+        this.setClickEvent('height_default', () => {
+            this.setHeight(1000);
+        });
+
+        document.getElementById('w-value-in').oninput = () => {
+            const w = document.getElementById('w-value-in').value;
+            this.setWidth(3000 * parseInt(w) / 100);
+        }
+        document.getElementById('h-value-in').oninput = () => {
+            const h = document.getElementById('h-value-in').value;
+            this.setHeight(1000 * h / 100);
+        }
+
     }
 
     setFunction(syn, mgc) {
@@ -108,7 +129,50 @@ class Menu {
     }
 
     setClickEvent(id, func) {
-        document.getElementById(id).onclick = func;
+        document.getElementById(id).addEventListener('click', func);
+    }
+
+    setWidth(width) {
+        const elements = document.querySelectorAll('canvas:not(#piano)');
+        const container = document.getElementById('canvas-container');
+        container.style.width = width + 20 + "px";
+        elements.forEach((element, index) => {
+            element.width = width;
+        });
+        const res = Math.floor(width / 3000 * 100);
+        document.getElementById('w-value-out').value = res + "%"
+        document.getElementById('w-value-in').value = res;
+        this.editor.resize();
+        this.bar.resize();
+    }
+
+    setHeight(height) {
+        const elements = document.querySelectorAll('canvas');
+        const container = document.getElementById('canvas-container');
+        container.style.height = height + "px";
+        elements.forEach((element, index) => {
+            element.height = height;
+        });
+        const res = Math.floor(height / 1000 * 100);
+        document.getElementById('h-value-out').value = res + "%"
+        document.getElementById('h-value-in').value = res;
+        this.editor.resize();
+        this.bar.resize();
+        this.piano.resize();
+    }
+
+    showDownloadDialog(wavOrScore) {
+        const w_s = document.getElementById(wavOrScore+'-container');
+        const dialog = document.getElementById('download_dialog');
+        const close = document.getElementById('d_close');
+
+        w_s.className = 'download';
+        dialog.className = 'download';
+
+        close.onclick = () => {
+            dialog.className = 'none';
+            w_s.className = 'none';
+        }
     }
 
     showInputDialog(e) {
@@ -118,28 +182,31 @@ class Menu {
             'tempo': 1,
             'beat': 2
         };
+
         const tags = {
-            'seconds': ['', '.', ':'],
+            'seconds': ['.', ':'],
             'tempo': [],
-            'beat': ['', '/']
-        }
+            'beat': ['/'],
+        };
+
+
         const div = document.getElementById('input_parameter');
         div.className = className;
-        document.querySelectorAll('.parameter').forEach(e => e.parentNode.removeChild(e));
+        document.querySelectorAll('.parameter,.parameter~span').forEach(e => e.parentNode.removeChild(e));
 
         for (let i = 0; i < input_num[className]; i++) {
-/*            if(i > 0){
-                const p = document.createElement('span');
-                p.innerHTML = tags[className][i];
-                p.className = 'symbol';
-                div.insertBefore(p, div.firstElementChild);
+            if (i > 0) {
+                const tag = document.createElement('span');
+                tag.innerHTML = tags[className][i - 1];
+                div.insertBefore(tag, div.firstElementChild);
             }
-*/          const input = document.createElement('input');
+            const input = document.createElement('input');
             input.type = 'number';
             input.className = 'parameter';
             div.insertBefore(input, div.firstElementChild);
         }
-        const close = document.getElementById('close');
+
+        const close = document.getElementById('p_close');
         const set = document.getElementById('set');
 
         close.onclick = () => {
@@ -157,23 +224,6 @@ class Menu {
         }
     }
 
-    insertElement(div, parameter) {
-        const tags = {
-            'seconds': [':', '.'],
-            'tempo': [],
-            'beat': ['.']
-        }
-        switch (parameter) {
-            case 'seconds':
-                for (let i = 0; i < input_num[className]; i++) {
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.className = 'parameter';
-                    div.insertBefore(input, div.firstElementChild);
-
-                }
-        }
-    }
 
     updateBpm(value) {
         this.bpm = Math.min(400, Math.max(20, (parseFloat(value) || this.bpm)));
