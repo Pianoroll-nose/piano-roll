@@ -19,6 +19,10 @@ class Util {
             "るぇ", "るぉ", "れ", "ろ", "わ", "を", "ん"];
     }
     
+    static existsSound(lyric) {
+        return this.getSoundIndex().includes(lyric);
+    }
+
     downloadScore(score, notesPerMeasure, beats) {
         const xml = this.musicXML.create(score, notesPerMeasure, beats);
 
@@ -31,7 +35,8 @@ class Util {
         }, 0);
     }
 
-    createWav(audioData) { 
+    createWav(audioData) {
+        console.log(audioData);
         const buf = new ArrayBuffer(44 + audioData.length*2);
         const view = new DataView(buf);
 
@@ -99,7 +104,6 @@ class Util {
         const readFile = (file) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.readAsText(file);
                 reader.onload = () => {
                     try{
                         resolve(this.musicXML.read(reader.result));
@@ -107,6 +111,7 @@ class Util {
                         reject(e);
                     }
                 }
+                reader.readAsText(file);
             });
         };
 

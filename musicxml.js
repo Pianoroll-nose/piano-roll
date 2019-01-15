@@ -233,12 +233,12 @@ class MusicXML {
         const octave = p.match(/\d/)[0];
 
         //pitchOffsetの計算が怪しい
-        const pitchOffset = (pitchList.indexOf(pitch) - pitchList.indexOf(this.basePitch - 1) + 12) % 12;
+        const pitchOffset = (pitchList.indexOf(pitch) - pitchList.indexOf(this.basePitch) + 12) % 12;
         const octaveOffset = (octave - this.baseOctave) * 12;
         const accidental = (sharpOrFlat[acc] || 0) + alter;
 
         //scoreの方は上からpitchが上からなので変換
-        return this.verticalNum - (pitchOffset + octaveOffset + accidental);
+        return this.verticalNum - (pitchOffset + octaveOffset + accidental + 1);
     }
 
     //http://roomba.hatenablog.com/entry/2016/02/03/150354 (2018/10/26)

@@ -33,8 +33,12 @@ class Menu {
         this.setClickEvent('undo', this.editor.undo.bind(this.editor));
         this.setClickEvent('redo', this.editor.redo.bind(this.editor));
         this.setClickEvent('play', () => {
-            //sox.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-            //this.bpm, this.beats);
+            const element = document.getElementById('synthesis');
+            element.className = 'synthesizing';
+            /*
+            sox.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+            this.bpm, this.beats);
+            */
             this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
                 this.bpm, this.beats).then(buf => {
                     if (buf.length > 0) {
@@ -48,18 +52,27 @@ class Menu {
                         this.mSeconds = 0;
                     }
                 });
+
+            element.className = 'none';
         });
+        this.setClickEvent('backward', () => document.getElementById('editor-container').scrollLeft = 0);
         this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
+        this.setClickEvent('forward', () => document.getElementById('editor-container').scrollLeft = 
+            document.getElementById('score').clientWidth);
         this.setClickEvent('clear', this.editor.clear.bind(this.editor));
         this.setClickEvent('remove', this.editor.remove.bind(this.editor));
         this.setClickEvent('d-wav', () => this.showDownloadDialog('wav'));
         this.setClickEvent('d-score', () => this.showDownloadDialog('score'));
         this.setClickEvent('downloadWav', () => {
+            const element = document.getElementById('synthesis');
+            element.className = 'synthesizing';
+
             this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
                 this.bpm, this.beats).then(buf => {
                     this.util.downloadWav(buf);
                 });
+            element.className = 'none';
         });
         this.setClickEvent('downloadScore', () => {
             this.util.downloadScore(this.editor.getScore(), this.notesPerMeasure, this.beats);
@@ -163,6 +176,7 @@ class Menu {
 
     showDownloadDialog(wavOrScore) {
         const w_s = document.getElementById(wavOrScore+'-container');
+        document.getElementById((wavOrScore === 'wav' ? 'score' : 'wav') + '-container').className = 'none';
         const dialog = document.getElementById('download_dialog');
         const close = document.getElementById('d_close');
 

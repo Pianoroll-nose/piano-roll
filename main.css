@@ -197,6 +197,7 @@ div::-webkit-scrollbar {
     display: inline-block;
 }
 
+
 p.parameter{ 
     width: 1em;
 }
@@ -209,6 +210,10 @@ p.parameter{
     background: rgba(255, 255, 255, 0.4);
 }
 
+.synthesizing {
+    display: inline;
+}
+
 #status {
     position: absolute;
     top: calc(50% - 20vmin);
@@ -216,9 +221,37 @@ p.parameter{
     width: 40vmin;
     height: 40vmin;
     z-index: 5;
-    border: solid 1px black;
 }
 
+.synthesizing > #status > div{
+    position: absolute;
+    top: calc(25% - 20px);
+    left: calc(25% - 20px);
+    width: 50%;
+    height: 50%;
+    z-index: 6;
+    border: solid 20px blue;    
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    0% { 
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+#status > p {
+    position: absolute;
+    top: calc(80% + 20px);
+    left: calc(27.5% + 20px);
+    text-align: center;
+    font-size: 4vmin;
+}
 
 .mode input[type="radio"]:checked + label{
     background-color: cyan;

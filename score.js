@@ -412,8 +412,11 @@ class Score {
         }
 
         if (this.scrollId !== null) {
-            clearTimeout(this.scrollId);
-            this.scrollId = null;
+            if(0 <= x && x <= this.container.clientWidth && 0 <= y && y <= this.container.clientHeight) {
+                clearTimeout(this.scrollId);
+                this.scrollId = null;    
+            }
+            return ;
         }
 
         //どうにかしたい
