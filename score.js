@@ -51,33 +51,34 @@ class Score {
     }
 
     draw() {
-        const _draw = (score, color) => {
+        const _draw = (score, backColor, fontColor) => {
             for (let s of score) {
                 let left = s.start * this.cellWidth;
                 let top = s.pitch * this.cellHeight;
                 let width = (s.end - s.start + 1) * this.cellWidth;
 
                 //四角の描画
-                this.ctx.fillStyle = color;
+                this.ctx.fillStyle = backColor;
                 this.ctx.fillRect(left, top, width, this.cellHeight);
                 this.ctx.strokeRect(left, top, width, this.cellHeight);
 
                 //歌詞の描画
-                this.ctx.fillStyle = "black";
+                this.ctx.fillStyle = fontColor;
                 this.ctx.fillText(s.lyric, left, top+this.cellHeight*0.6, width);
             }
         }
 
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
 
-        this.ctx.strokeStyle = "black";
+        this.ctx.strokeStyle = "#00ff00";
         this.ctx.font = this.cellHeight + "px Arial";
         this.ctx.textBaseline = "middle";
 
-        _draw(this.score.filter((e, i) => this.selectedNotes.map(e => e.index).indexOf(i) === -1), "red");
+        _draw(this.score.filter((e, i) => this.selectedNotes.map(e => e.index).indexOf(i) === -1), "black", "#00ff00");
 
         if (this.isDragging) {
-            _draw([this.dragProperty], "rgba(255, 0, 0, 0.4)");
+            this.ctx.strokeStyle = "black";
+            _draw([this.dragProperty], "#00ff00", "black");
         }
 
         /*どうにかできそう*/
@@ -92,7 +93,7 @@ class Score {
                 }
 
                 return obj;
-            }).filter((e, i) => this.selectedNotes.map(e => e.index).indexOf(i) !== -1), "rgba(0, 0, 255, 0.4)");
+            }).filter((e, i) => this.selectedNotes.map(e => e.index).indexOf(i) !== -1), "#00ff00", "black");
         }
     }
 
@@ -241,7 +242,8 @@ class Score {
         input.style.padding = "0px";
         input.style.margin = "0px";
         input.style.border = "0px";
-        input.style.backgroundColor = "red";
+        input.style.backgroundColor = "black";
+        input.style.color = "#00ff00";
         this.canvas.style.pointerEvents = "none";
         let isCalled = false;
 

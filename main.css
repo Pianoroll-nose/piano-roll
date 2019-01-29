@@ -1,11 +1,13 @@
 *{
     margin: 0;
     padding: 0;
+    color: #00ff00;
 }
 
 html, body{
     width: 100vw;
     height: 100vh;
+    background-color: #000000;
     user-select: none;
 }
 
@@ -23,7 +25,10 @@ input[type="radio"]{
 }
 
 button:active{
-    background-color: cyan;
+    background-color: #00ff00;
+}
+button:active > i {
+    color: black;
 }
 
 div::-webkit-scrollbar {
@@ -62,7 +67,7 @@ div::-webkit-scrollbar {
 
 .menu > li{
     list-style: none;
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
     border-right: none;
     border-radius: 2px;
     width: 20%;
@@ -71,7 +76,7 @@ div::-webkit-scrollbar {
 }
 
 .menu > li:last-child{
-    border-right: solid 1px #000000;
+    border-right: solid 1px #00ff00;
 }
 
 .menu > li > ul{
@@ -96,19 +101,19 @@ div::-webkit-scrollbar {
     width: 100%;
     padding: 0px;
     list-style: none;
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
     border-bottom: none;
-    background-color: white;
+    background-color: black;
     height: auto;
     transition: .2s;
 }
 
 .menu > li:hover > ul > li:hover{
-    background-color: aliceblue;
+    background-color: black;
 }
 
 .menu > li:hover > ul > li:last-child{
-    border-bottom: solid 1px #000000;
+    border-bottom: solid 1px #00ff00;
 }
 
 #button-container {
@@ -118,7 +123,7 @@ div::-webkit-scrollbar {
     grid-row: 2;
     grid-column: 1 / 4;
     height: 100%;
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
 }
 
 #button-container > div{
@@ -132,7 +137,7 @@ div::-webkit-scrollbar {
 }
 
 .play button{
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
     font-size: 1em;
     border-radius: 50%;
     padding: 0.5em;
@@ -140,7 +145,7 @@ div::-webkit-scrollbar {
 }
 
 .monitor{
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
     display: flex;
     justify-content: space-between;
 }
@@ -160,8 +165,8 @@ div::-webkit-scrollbar {
     width: 60vw;
     height: 60vh;
     z-index: 2;
-    background: rgb(225, 229, 224);
-    border: solid 1px black;
+    background: transparent;
+    border: solid 1px #00ff00;
     border-radius: 1%;
 }
 
@@ -254,11 +259,17 @@ p.parameter{
 }
 
 .mode input[type="radio"]:checked + label{
-    background-color: cyan;
+    background-color: #00ff00;
 }
 
+.mode input[type="radio"]:checked + label > i{
+    background-color: #00ff00;
+    color: black;
+}
+
+
 .mode label{
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
     font-size: 1em;
     padding: 0.5em;
     margin: 1%;
@@ -270,7 +281,7 @@ p.parameter{
     min-height: 10vh;
     max-height: 40vh;
     height: 25vh;
-    border: solid 1px #000000;
+    border: solid 1px #00ff00;
     resize: vertical;
     overflow: scroll;
 }
@@ -371,7 +382,7 @@ p.parameter{
     grid-row: 5; 
     grid-column: 2; 
     height: 20px; 
-    background-color: white; 
+    background-color: black;
     z-index: 2;
     display: grid;
     grid-template-columns: 1fr 20px 20px 20% 5%;
@@ -435,7 +446,8 @@ p.parameter{
 #piano{
     position: absolute;
     margin-bottom: calc(30px - 5px);
-    border-bottom: 1px solid #999999;
+    background-color: white;
+    border-bottom: 1px solid #00ff00;
 }
 
 #canvas-container {
@@ -456,5 +468,5 @@ p.parameter{
 
 #background{
     position: absolute;
-    border-bottom: 1px solid #999999;
+    border-bottom: 1px solid #00ff00;
 }

@@ -15,7 +15,7 @@ class BackGround {
         this.areaHeight = this.canvas.clientHeight;
         this.draw();
     }
-    
+
     draw() {
         this.ctx.clearRect(0, 0, this.areaWidth, this.areaHeight);
 
@@ -23,17 +23,20 @@ class BackGround {
         const cellHeight = this.areaHeight / this.verticalNum;
         this.ctx.strokeStyle = "black";
 
-        for(let i = 0; i <= this.measureNum; i++){
+        this.ctx.fillStyle = "gray";
+        this.ctx.fillRect(0, 0, this.areaWidth, this.areaHeight);
+
+        for (let i = 0; i <= this.measureNum; i++) {
             this.ctx.lineWidth = (i % this.beats == 0) ? 4 : 1;
 
             this.ctx.beginPath();
-            this.ctx.moveTo(cellWidth*i, 0);
-            this.ctx.lineTo(cellWidth*i, this.areaHeight);
+            this.ctx.moveTo(cellWidth * i, 0);
+            this.ctx.lineTo(cellWidth * i, this.areaHeight);
             this.ctx.stroke();
         }
 
         this.ctx.lineWidth = 1;
-        for(let h = 0; h <= this.areaHeight; h += cellHeight){
+        for (let h = 0; h <= this.areaHeight; h += cellHeight) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, h);
             this.ctx.lineTo(this.areaWidth, h);

@@ -58,11 +58,11 @@ class Menu {
 
         });
         this.setClickEvent('backward', () => document.getElementById('editor-container').scrollLeft = 0);
-        this.setClickEvent('pause', this.bar.pause.bind(this.bar));
+        //this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
         this.setClickEvent('forward', () => document.getElementById('editor-container').scrollLeft = 
             document.getElementById('score').clientWidth);
-        this.setClickEvent('clear', this.editor.clear.bind(this.editor));
+        //this.setClickEvent('clear', this.editor.clear.bind(this.editor));
         this.setClickEvent('remove', this.editor.remove.bind(this.editor));
         this.setClickEvent('d-wav', () => this.showDownloadDialog('wav'));
         this.setClickEvent('d-score', () => this.showDownloadDialog('score'));
@@ -86,11 +86,13 @@ class Menu {
                 alert(e);
             });
         });
+        /*
         this.setClickEvent('updateBpm', () => {
             const bpm = this.bpm = Math.min(400, Math.max(20, (parseFloat(document.getElementById('bpm_in').value) || this.bpm)));
             document.getElementById('bpm').innerHTML = bpm.toFixed(2);
             this.bar.updateBpm(bpm);
         });
+        */
 
         document.querySelectorAll('.parameters').forEach((e) => {
             e.onclick = () => this.showInputDialog(e);
