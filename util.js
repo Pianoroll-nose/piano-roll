@@ -36,7 +36,6 @@ class Util {
     }
 
     createWav(audioData) {
-        console.log(audioData);
         const buf = new ArrayBuffer(44 + audioData.length*2);
         const view = new DataView(buf);
 

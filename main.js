@@ -1,19 +1,6 @@
 function start() {
     const scroll = new Scroll();
-    sox = new Sox();
     this.menu = new Menu();
-
-    const setFunc = () => {
-        if (isInstantiated) {
-            //sox.setFunction(Module.cwrap('timeStretch', null, ['string', 'number', 'number']));
-            menu.setFunction(Module.cwrap('synthesis', null, ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']),
-                Module.cwrap('my_mgc2sp', null, ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number']));
-        }
-        else {
-            setTimeout(setFunc, 300);
-        }
-    };
-    setFunc();
 
     //画面のリサイズ処理の登録
     (function () {
@@ -35,9 +22,3 @@ const modes = {
     'pen': 1,
     'erase': 2
 };
-
-
-let isInstantiated = false;
-Module.onRuntimeInitialized = () => {
-    isInstantiated = true;
-}

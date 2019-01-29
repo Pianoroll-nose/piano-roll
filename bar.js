@@ -1,9 +1,10 @@
 class Bar {
-    constructor(bpm, horizontalNum, beats) {
+    constructor(bpm, horizontalNum, beats, ctx) {
         this.disp = document.querySelector('.parameters').lastElementChild;
         this.canvas = document.getElementById("bar");
         this.container = document.getElementById('editor-container');
         this.ctx = this.canvas.getContext("2d");
+        this.audioCtx = ctx;
         this.bpm = bpm;
         this.horizontalNum = horizontalNum;
         this.beats = beats;
@@ -20,10 +21,11 @@ class Bar {
             this.cancelAnimation();
         }
 
+        this.audioCtx.resume();
         this.src = src;
         const startX = this.x;
         const startTime = ctx.currentTime;
-        src.start(ctx.currentTime, mSec / 1000);
+        //src.start(ctx.currentTime, mSec / 1000);
 
         const animation = () => {
             this.drawBar();
@@ -60,8 +62,9 @@ class Bar {
         this.cancelAnimation();
         this.disp.innerHTML = '000:00.0000';
         this.drawBar();
+        this.audioCtx.suspend();
         if(this.src !== null){
-            this.src.stop();
+            //this.src.stop();
             this.src = null;
         }
         this.container.scrollLeft = 0;

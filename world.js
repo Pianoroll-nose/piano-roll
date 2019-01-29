@@ -1,35 +1,7 @@
 class World {
-    constructor() {
-        /*for namineritsu
-        this.soundIndex = [
-            "あ", "い", "いぇ", "う", "うぁ", "うぃ", "うぇ", "うぉ", "え", "お", "か", "が", "き", "きぇ", "きゃ",
-            "きゅ", "きょ", "ぎ", "ぎぇ", "ぎゃ", "ぎゅ", "ぎょ", "く", "くぁ", "くぃ", "くぇ", "くぉ", "ぐ", "ぐぁ",
-            "ぐぃ", "ぐぇ", "ぐぉ", "け", "げ", "こ", "ご", "さ", "ざ", "し", "しぇ", "しゃ", "しゅ", "しょ", "じ",
-            "じぇ", "じゃ", "じゅ", "じょ", "す", "すぁ", "すぃ", "すぇ", "すぉ", "ず", "ずぁ", "ずぃ", "ずぇ", "ずぉ",
-            "せ", "ぜ", "そ", "ぞ", "た", "だ", "ち", "ちぇ", "ちゃ", "ちゅ", "ちょ", "つ", "つぁ", "つぃ", "つぇ",
-            "つぉ", "て", "てぃ", "てゅ", "で", "でぃ", "でゅ", "と", "とぅ", "ど", "どぅ", "な", "に", "にぇ", "にゃ",
-            "にゅ", "にょ", "ぬ", "ぬぁ", "ぬぃ", "ぬぇ", "ぬぉ", "ね", "の", "は", "ば", "ぱ", "ひ", "ひぇ", "ひゃ",
-            "ひゅ", "ひょ", "び", "びぇ", "びゃ", "びゅ", "びょ", "ぴ", "ぴぇ", "ぴゃ", "ぴゅ", "ぴょ", "ふ", "ふぁ",
-            "ふぃ", "ふぇ", "ふぉ", "ぶ", "ぶぁ", "ぶぃ", "ぶぇ", "ぶぉ", "ぷ", "ぷぁ", "ぷぃ", "ぷぇ", "ぷぉ", "へ",
-            "べ", "ぺ", "ほ", "ぼ", "ぽ", "ま", "み", "みぇ", "みゃ", "みゅ", "みょ", "む", "むぁ", "むぃ", "むぇ",
-            "むぉ", "め", "も", "や", "ゆ", "よ", "ら", "り", "りぇ", "りゃ", "りゅ", "りょ", "る", "るぁ", "るぃ",
-            "るぇ", "るぉ", "れ", "ろ", "わ", "を", "ん"];
-        //*/
+    constructor(context) {
         this.soundIndex = Util.getSoundIndex();
-        /*//for gekiyaku
-        this.soundIndex = [
-            "あ", "い", "いぇ", "う", "うぃ", "うぇ", "うぉ", "え", "お", "か", "が", "き", "きぇ", "きゃ", "きゅ", 
-            "きょ", "ぎ", "ぎぇ", "ぎゃ", "ぎゅ", "ぎょ", "く", "くぁ", "くぃ", "くぇ", "くぉ", "ぐ", "ぐぁ", "ぐぃ", 
-            "ぐぇ", "ぐぉ", "け", "げ", "こ", "ご", "さ", "ざ", "し", "しぇ", "しゃ", "しゅ", "しょ", "じ", "じぇ", 
-            "じゃ", "じゅ", "じょ", "す", "すぃ", "ず", "ずぃ", "せ", "ぜ", "そ", "ぞ", "た", "だ", "ち", "ちぇ", 
-            "ちゃ", "ちゅ", "ちょ", "つ", "つぁ", "つぃ", "つぇ", "つぉ", "て", "てぃ", "てゅ", "で", "でぃ", "でゅ", 
-            "と", "とぅ", "ど", "どぅ", "な", "に", "にぇ", "にゃ", "にゅ", "にょ", "ぬ", "ね", "の", "は", "ば", 
-            "ぱ", "ひ", "ひぇ", "ひゃ", "ひゅ", "ひょ", "び", "びぇ", "びゃ", "びゅ", "びょ", "ぴ", "ぴぇ", "ぴゃ", 
-            "ぴゅ", "ぴょ", "ふ", "ふぁ", "ふぃ", "ふぇ", "ふぉ", "ふゅ", "ぶ", "ぷ", "へ", "べ", "ぺ", "ほ", "ぼ", 
-            "ぽ", "ま", "み", "みぇ", "みゃ", "みゅ", "みょ", "む", "め", "も", "や", "ゆ", "よ", "ら", "り", "りぇ", 
-            "りゃ", "りゅ", "りょ", "る", "れ", "ろ", "わ", "を", "ん", "ヴ", "ヴぁ", "ヴぃ", "ヴぇ", "ヴぉ"
-        ];
-        */
+
         this.sounds = [];
         this.fs = 44100;
         this.frame_period = 5;
@@ -75,6 +47,16 @@ class World {
             }
         }
         load();
+        this.worker = new Worker('worker.js');
+        this.worker.postMessage({
+            message: 'init',
+        });
+        this.isInitialized = false;
+        this.worker.addEventListener('message', (e) => {
+            if (e.data.message === 'init')
+                this.isInitialized = true;
+        });
+        this.audioCtx = context;
     }
 
     waitDownload(index) {
@@ -119,32 +101,26 @@ class World {
         await this.waitDownload(index);
 
         const fft_size = this.fft_size;
-        const split = [0, fft_size/16, 2*fft_size/16, 2*fft_size/16+fft_size/8, 2*fft_size/16 + 2*fft_size/8, fft_size/2+1];
-        
+        const split = [0, fft_size / 16, 2 * fft_size / 16, 2 * fft_size / 16 + fft_size / 8, 2 * fft_size / 16 + 2 * fft_size / 8, fft_size / 2 + 1];
+
         console.time('bap2ap');
         const ap = new Float64Array(this.sounds[index]["bap"].length * this.f_points);
         const tmp = new Float64Array(this.sounds[index]["bap"]);
-        for(let i = 0, len = this.sounds[index]["f0"]; i < len; i++) {
-            for(let j = 0; j < 5; j++) {
-                for(let k = split[j], last = split[j+1]; k < last; k++) {
-                    ap[i*len+k] = tmp[i*len+j];
+        for (let i = 0, len = this.sounds[index]["f0"]; i < len; i++) {
+            for (let j = 0; j < 5; j++) {
+                for (let k = split[j], last = split[j + 1]; k < last; k++) {
+                    ap[i * len + k] = tmp[i * len + j];
                 }
             }
         }
         console.timeEnd('bap2ap');
+        return ap;
         this.sounds[index]["ap"] = ap;
         delete this.sounds[index]["bap"];
     }
 
-    setFunction(syn, mgc) {
-        this._synthesis = async (f_p, fs, f0, f0_len, sp, ap, fft_size, out_len, out) =>
-            syn(f_p, fs, f0, f0_len, sp, ap, fft_size, out_len, out);
-        this._mgc2sp = async (_mgc, len, m, fft_size, o, alpha, gamma, norm, phase, mulg, out) =>
-            mgc(_mgc, len, m, fft_size, o, alpha, gamma, norm, phase, mulg, out);
-    }
-
     async scoreToBuffer(score, basePitch, verticalNum, bpm, beats) {
-        let f0_len = 0, sp_len = 0, ap_len = 0;
+        let f0_len = 0, mgc_len = 0, ap_len = 0;
         let lastIndex = 0;
         for (let s of score) {
             let length = this.cellToMSeconds(bpm, beats, s.end - s.start + 1);
@@ -153,17 +129,17 @@ class World {
             }
             const time_len = Math.floor(length / this.frame_period);
             f0_len += time_len;
-            sp_len += time_len * this.f_points;  //周波数方向1025点
+            mgc_len += time_len * (this.mel_points + 1);  //周波数方向1025点
             ap_len += time_len * this.f_points;
             lastIndex = s.end + 1;
         }
 
         let f0_buf = new Float64Array(f0_len);
-        let sp_buf = new Float64Array(sp_len);
+        let mgc_buf = new Float64Array(mgc_len);
         let ap_buf = new Float64Array(ap_len);
 
         let f0_offset = 0;
-        let sp_offset = 0;
+        let mgc_offset = 0;
         let ap_offset = 0;
         lastIndex = 0;
         for (let s of score) {
@@ -172,28 +148,31 @@ class World {
                 length /= this.frame_period;
                 length = Math.floor(length);
                 f0_buf.set(Array(length).fill(0), f0_offset);
-                sp_buf.set(Array(length * this.f_points).fill(0), sp_offset);
+                mgc_buf.set(Array(length * (this.mel_points + 1)).fill(0), mgc_offset);
                 ap_buf.set(Array(length * this.f_points).fill(0), ap_offset);
                 f0_offset += length;
-                sp_offset += length * this.f_points;
+                mgc_offset += length * (this.mel_points + 1);
                 ap_offset += length * this.f_points;
             }
             const index = this.soundIndex.indexOf(s.lyric);
-            if (!this.sounds[index] || !this.sounds[index]["sp"] || !this.sounds[index]["ap"]) {
-                await Promise.all([this.mgc2sp(index), this.bap2ap(index)]);
-            }
+            await this.waitDownload(index);
+            const original_ap = await this.bap2ap(index);
+            /*
+                        if (!this.sounds[index] || !this.sounds[index]["sp"] || !this.sounds[index]["ap"]) {
+                            await Promise.all([this.mgc2sp(index), this.bap2ap(index)]);
+                        }
+            */
             const _f0 = this.makePitch(this.sounds[index].f0, this.pitchToMidiNum(s.pitch, basePitch, verticalNum));
-            const [f0, sp, ap] = this.alignLength(_f0, this.sounds[index].sp, this.sounds[index].ap, bpm, beats, s.end - s.start + 1);
+            const [f0, mgc, ap] = this.alignLength(_f0, this.sounds[index].mgc, original_ap, bpm, beats, s.end - s.start + 1);
             f0_buf.set(f0, f0_offset);
-            sp_buf.set(sp, sp_offset);
+            mgc_buf.set(mgc, mgc_offset);
             ap_buf.set(ap, ap_offset);
             f0_offset += f0.length;
-            sp_offset += sp.length;
+            mgc_offset += mgc.length;
             ap_offset += ap.length;
             lastIndex = s.end + 1;
         }
-
-        return [f0_buf, sp_buf, ap_buf];
+        return [f0_buf, mgc_buf, ap_buf];
     }
 
 
@@ -215,26 +194,29 @@ class World {
         return (69 - pitchOffset + octaveOffset) + (verticalNum - 1 - pitch);
     }
 
-    alignLength(f0, sp, ap, bpm, beats, length) {
+    alignLength(f0, mgc, ap, bpm, beats, length) {
         const m_sec = this.cellToMSeconds(bpm, beats, length);
         const times = (f0.length * this.frame_period) / m_sec;
-        const f_points = sp.length / f0.length;
+        const f_points = this.f_points;
+        const mel_points = this.mel_points + 1;
 
         const time_length = Math.floor((f0.length - 1) / times);
         const _f0 = new Float64Array(time_length);
-        const _sp = new Float64Array(time_length * f_points);
+        const _mgc = new Float64Array(time_length * mel_points);
         const _ap = new Float64Array(time_length * f_points);
 
         for (let i = 0, len = _f0.length; i < len; i++) {
             const newIdx = i * times;
             const x = newIdx - Math.floor(newIdx);
             for (let j = 0; j < f_points; j++) {
-                _sp[i * f_points + j] = this.linear(sp[Math.floor(newIdx) * f_points + j], sp[Math.ceil(newIdx) * f_points + j], x);
                 _ap[i * f_points + j] = this.linear(ap[Math.floor(newIdx) * f_points + j], ap[Math.ceil(newIdx) * f_points + j], x);
+            }
+            for (let j = 0; j < mel_points; j++) {
+                _mgc[i * mel_points + j] = this.linear(mgc[Math.floor(newIdx) * mel_points + j], mgc[Math.ceil(newIdx) * mel_points + j], x);
             }
             _f0[i] = this.linear(f0[Math.floor(newIdx)], f0[Math.ceil(newIdx)], x);
         }
-        return [_f0, _sp, _ap];
+        return [_f0, _mgc, _ap];
     }
 
     linear(y2, y1, x) {
@@ -247,76 +229,38 @@ class World {
 
     async synthesis(score, basePitch, verticalNum, bpm, beats) {
         console.time('score2Buf');
-        const [f0, sp, ap] = await this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
+        const [f0, mgc, ap] = await this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
         console.timeEnd('score2Buf');
         if (f0.length === 0) return [];
-        console.time('heap');
-
-        const f0_length = f0.length;
-
-        const f0_size = f0_length * f0.BYTES_PER_ELEMENT;
-        const f0_ptr = Module._malloc(f0_size);
-        let f0_heap = new Uint8Array(Module.HEAPU8.buffer, f0_ptr, f0_size);
-        f0_heap.set(new Uint8Array(f0.buffer));
-
-        const sp_size = sp.length * sp.BYTES_PER_ELEMENT;
-        const sp_ptr = Module._malloc(sp_size);
-        let sp_heap = new Uint8Array(Module.HEAPU8.buffer, sp_ptr, sp_size);
-        sp_heap.set(new Uint8Array(sp.buffer));
-
-        //ポインタの型つき配列を作成 max:2GB
-        const sp_pointers = new Uint32Array(f0_length);
-        for (let i = 0; i < f0_length; i++) {
-            sp_pointers[i] = sp_ptr + i * sp.BYTES_PER_ELEMENT * this.f_points;
-        }
-        const sp_pointers_size = sp_pointers.length * sp_pointers.BYTES_PER_ELEMENT;
-        const sp_pointers_ptr = Module._malloc(sp_pointers_size);
-        let sp_pointers_heap = new Uint8Array(Module.HEAPU8.buffer, sp_pointers_ptr, sp_pointers_size);
-        sp_pointers_heap.set(new Uint8Array(sp_pointers.buffer));
-
-        const ap_size = ap.length * ap.BYTES_PER_ELEMENT;
-        const ap_ptr = Module._malloc(ap_size);
-        let ap_heap = new Uint8Array(Module.HEAPU8.buffer, ap_ptr, ap_size);
-        ap_heap.set(new Uint8Array(ap.buffer));
-
-        //ポインタの型つき配列を作成 max:2GB
-        const ap_pointers = new Uint32Array(f0_length);
-        for (let i = 0; i < f0_length; i++) {
-            ap_pointers[i] = ap_ptr + i * ap.BYTES_PER_ELEMENT * this.f_points;
-        }
-        const ap_pointers_size = ap_pointers.length * ap_pointers.BYTES_PER_ELEMENT;
-        const ap_pointers_ptr = Module._malloc(ap_pointers_size);
-        let ap_pointers_heap = new Uint8Array(Module.HEAPU8.buffer, ap_pointers_ptr, ap_pointers_size);
-        ap_pointers_heap.set(new Uint8Array(ap_pointers.buffer));
-
-        //worldで定義されていた通り
-        const out_length = Math.floor((f0.length - 1) * this.frame_period / 1000.0 * this.fs) + 1;
-        const out = new Float64Array(out_length);
-        const out_size = out.length * out.BYTES_PER_ELEMENT;
-        const out_ptr = Module._malloc(out_size);
-        let out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
-        out_heap.set(new Uint8Array(out.buffer));
-
-        console.timeEnd('heap');
-        console.time('synthesis');
-        //double frame_period, int fs, double *f0, int f0_len, double **sp, double**ap, int fft_size, int out_len, double *out
-        await this._synthesis(this.frame_period, this.fs, f0_ptr, f0_length, sp_pointers_ptr, ap_pointers_ptr,
-            this.fft_size, out_length, out_ptr);
-        console.timeEnd('synthesis');
-
-        out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
-        const result = new Float64Array(out_heap.buffer, out_heap.byteOffset, out_length);
-
-        Module._free(f0_heap.byteOffset);
-        Module._free(sp_heap.byteOffset);
-        Module._free(sp_pointers_heap.byteOffset);
-        Module._free(ap_heap.byteOffset);
-        Module._free(ap_pointers_heap.byteOffset);
-        Module._free(out_heap.byteOffset);
-
-        const audio = Array.from(result);
-
-        return audio;
+        let lastTime = 0;
+        return new Promise((resolve, reject) => {
+            let length = 0;
+            let startTime = null;
+            this.worker.postMessage({
+                message: 'synthesis',
+                args: [
+                    this.frame_period, this.fs, f0, mgc, this.mel_points,
+                    ap, this.fft_size
+                ]
+            });
+            this.worker.onmessage = (e) => {
+                if (e.data.message === 'start' || e.data.message === 'finish') {
+                    resolve([]);
+                }
+                if (e.data.message === 'wav') {
+                    if(!startTime) {
+                        startTime = this.audioCtx.currentTime;
+                    }
+                    const buffer = this.audioCtx.createBuffer(1, e.data.data.length, 44100);
+                    buffer.copyToChannel(e.data.data, 0);
+                    const src = this.audioCtx.createBufferSource();
+                    src.buffer = buffer;
+                    src.connect(this.audioCtx.destination);
+                    src.start(startTime + length, 0);
+                    length += buffer.duration;
+                }
+            };
+        });
     }
 
 }

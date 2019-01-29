@@ -12,12 +12,13 @@ class Menu {
         this.mode = 1;
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         this.audioCtx = new AudioContext();
+        this.audioCtx.suspend();
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
-        this.bar = new Bar(this.bpm, this.horizontalNum, this.beats);
-        this.world = new World();
+        this.bar = new Bar(this.bpm, this.horizontalNum, this.beats, this.audioCtx);
+        this.world = new World(this.audioCtx);
 
         this.init();
     }
@@ -35,12 +36,11 @@ class Menu {
         this.setClickEvent('play', () => {
             const element = document.getElementById('synthesis');
             element.className = 'synthesizing';
-            /*
-            sox.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-            this.bpm, this.beats);
-            */
+
             this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
                 this.bpm, this.beats).then(buf => {
+                    element.className = 'none';
+/*                    
                     if (buf.length > 0) {
                         const buffer = this.audioCtx.createBuffer(1, buf.length, 44100);
                         buffer.copyToChannel(new Float32Array(buf), 0);
@@ -51,9 +51,11 @@ class Menu {
                         this.bar.play(this.audioCtx, src, this.mSeconds);
                         this.mSeconds = 0;
                     }
+*/
+                this.bar.play(this.audioCtx);
+                this.mSeconds = 0;
                 });
 
-            element.className = 'none';
         });
         this.setClickEvent('backward', () => document.getElementById('editor-container').scrollLeft = 0);
         this.setClickEvent('pause', this.bar.pause.bind(this.bar));
@@ -135,10 +137,6 @@ class Menu {
             this.setHeight(1000 * h / 100);
         }
 
-    }
-
-    setFunction(syn, mgc) {
-        this.world.setFunction(syn, mgc);
     }
 
     setClickEvent(id, func) {
