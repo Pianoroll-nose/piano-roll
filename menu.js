@@ -12,7 +12,7 @@ class Menu {
         this.mode = 1;
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         this.audioCtx = new AudioContext();
-        this.audioCtx.suspend();
+        //this.audioCtx.suspend();
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);
@@ -40,27 +40,17 @@ class Menu {
             this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
                 this.bpm, this.beats).then(buf => {
                     element.className = 'none';
-/*                    
-                    if (buf.length > 0) {
-                        const buffer = this.audioCtx.createBuffer(1, buf.length, 44100);
-                        buffer.copyToChannel(new Float32Array(buf), 0);
-                        const src = this.audioCtx.createBufferSource();
-                        src.buffer = buffer;
-                        src.connect(this.audioCtx.destination);
-
-                        this.bar.play(this.audioCtx, src, this.mSeconds);
-                        this.mSeconds = 0;
+                    if(buf.length > 0) {
+                        this.bar.play(buf, this.mSeconds);
+                        this.mSeconds = 0;    
                     }
-*/
-                this.bar.play(this.audioCtx);
-                this.mSeconds = 0;
                 });
 
         });
         this.setClickEvent('backward', () => document.getElementById('editor-container').scrollLeft = 0);
         //this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
-        this.setClickEvent('forward', () => document.getElementById('editor-container').scrollLeft = 
+        this.setClickEvent('forward', () => document.getElementById('editor-container').scrollLeft =
             document.getElementById('score').clientWidth);
         //this.setClickEvent('clear', this.editor.clear.bind(this.editor));
         this.setClickEvent('remove', this.editor.remove.bind(this.editor));
@@ -175,7 +165,7 @@ class Menu {
     }
 
     showDownloadDialog(wavOrScore) {
-        const w_s = document.getElementById(wavOrScore+'-container');
+        const w_s = document.getElementById(wavOrScore + '-container');
         document.getElementById((wavOrScore === 'wav' ? 'score' : 'wav') + '-container').className = 'none';
         const dialog = document.getElementById('download_dialog');
         const close = document.getElementById('d_close');

@@ -9,35 +9,33 @@ class Bar {
         this.horizontalNum = horizontalNum;
         this.beats = beats;
         this.id = null;
-        this.src = null;
+        this.srcs = null;
         this.resize();
 
         this.x = 0;
     }
 
-    play(ctx, src, mSec) {
+    play(srcs, mSec) {
         if (this.id !== null) {
             this.x = 0;
             this.cancelAnimation();
         }
 
-        this.audioCtx.resume();
-        this.src = src;
+        this.srcs = srcs;
         const startX = this.x;
-        const startTime = ctx.currentTime;
-        //src.start(ctx.currentTime, mSec / 1000);
+        const startTime = performance.now();
 
         const animation = () => {
             this.drawBar();
 
-            const currentTime = ctx.currentTime;
+            const currentTime = performance.now();
 
             if (this.x > this.areaWidth) {
                 this.stop();
             }
             else {
-                const diff = currentTime - startTime;
-                const diffMin = diff / 60;//s->m
+                const diff = (currentTime - startTime) / 1000; //s
+                const diffMin = diff / 60;  //s->m
                 const diffSec = diff % 60;
                 const diffMSec = diff * 100000 % 10000; //4桁表示
                 this.x = startX + diffMin * this.bpm * this.beats * this.cellWidth;
@@ -62,10 +60,12 @@ class Bar {
         this.cancelAnimation();
         this.disp.innerHTML = '000:00.0000';
         this.drawBar();
-        this.audioCtx.suspend();
-        if(this.src !== null){
-            //this.src.stop();
-            this.src = null;
+
+        if(this.srcs !== null){
+            for(let s of this.srcs) {
+                s.stop();
+            }
+            this.srcs = null;
         }
         this.container.scrollLeft = 0;
     }

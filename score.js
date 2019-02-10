@@ -252,7 +252,8 @@ class Score {
             if (isCalled) return;
             isCalled = true;
             const add = Object.assign({}, this.score[index]);
-            add.lyric = txtBox.value;
+            if(Util.existsSound(txtBox.value))
+                add.lyric = txtBox.value;
             this.addNotes([add]);
             this.draw();
             txtBox.parentNode.removeChild(txtBox);

@@ -49,7 +49,7 @@ class World {
         load();
         this.worker = new Worker('worker.js');
         this.worker.postMessage({
-            message: 'init',
+            message: 'init'
         });
         this.isInitialized = false;
         this.worker.addEventListener('message', (e) => {
@@ -232,10 +232,21 @@ class World {
         const [f0, mgc, ap] = await this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
         console.timeEnd('score2Buf');
         if (f0.length === 0) return [];
-        let lastTime = 0;
-        return new Promise((resolve, reject) => {
+
+        const startSrc = (srcs, start, end, startTime) => {
             let length = 0;
+            for(let i = start; i < end; i++) {
+                srcs[i].start(startTime + length, 0);
+                length += srcs[i].buffer.duration;
+
+            }
+            return startTime + length;
+        };
+
+        return new Promise((resolve, reject) => {
             let startTime = null;
+            let canStart = false;
+            const srcs = [];
             this.worker.postMessage({
                 message: 'synthesis',
                 args: [
@@ -243,21 +254,27 @@ class World {
                     ap, this.fft_size
                 ]
             });
+
             this.worker.onmessage = (e) => {
-                if (e.data.message === 'start' || e.data.message === 'finish') {
-                    resolve([]);
+                if(e.data.message === 'finish'){
+//                if (e.data.message === 'start' || e.data.message === 'finish') {
+                    if(!canStart) {
+                        startTime = this.audioCtx.currentTime;
+                        startTime = startSrc(srcs, 0, srcs.length, startTime);
+                        canStart = true;
+                        resolve(srcs);
+                    }
                 }
                 if (e.data.message === 'wav') {
-                    if(!startTime) {
-                        startTime = this.audioCtx.currentTime;
-                    }
                     const buffer = this.audioCtx.createBuffer(1, e.data.data.length, 44100);
                     buffer.copyToChannel(e.data.data, 0);
                     const src = this.audioCtx.createBufferSource();
                     src.buffer = buffer;
                     src.connect(this.audioCtx.destination);
-                    src.start(startTime + length, 0);
-                    length += buffer.duration;
+                    srcs.push(src);
+                    if(canStart) {
+                        startSrc(srcs, srcs.length-1, srcs.length, startTime);
+                    }
                 }
             };
         });

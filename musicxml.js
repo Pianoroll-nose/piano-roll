@@ -293,7 +293,9 @@ class MusicXML {
                 }
 
                 if(n.querySelector('lyric') !== null) {
-                    note.lyric = n.querySelector('lyric text').textContent;
+                    const lyric = n.querySelector('lyric text').textContent;
+                    if(Util.existsSound(lyric))
+                        note.lyric = lyric;
                 }
 
                 if(n.querySelector('rest') === null) {
