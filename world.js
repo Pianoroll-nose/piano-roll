@@ -177,10 +177,9 @@ class World {
 
 
     makePitch(f0, pitch) {
-        //元の信号のmidi番号を求める
-        const midi_num = Math.round(12 * (Math.log10(f0[Math.floor(f0.length / 2)] + 0.1) - Math.log10(440)) / Math.log10(2)) + 69;
-        const diff = Math.pow(2, (pitch - midi_num) / 12);
-        const _f0 = f0.map(n => n * diff);
+        const targetF0 = 440 * Math.pow(2, (pitch - 69) / 12);
+        const _f0 = f0.map(n => (n < Number.EPSILON) ? 0 : targetF0);
+
         return _f0;
     }
 
@@ -216,6 +215,7 @@ class World {
             }
             _f0[i] = this.linear(f0[Math.floor(newIdx)], f0[Math.ceil(newIdx)], x);
         }
+
         return [_f0, _mgc, _ap];
     }
 
