@@ -144,12 +144,26 @@ class World {
         lastIndex = 0;
         for (let s of score) {
             if (s.start - lastIndex > 0) {
+                //無音("あ"の0フレーム目)をセット
+/*
+                const f0 = this.sounds[0].f0.slice(0, 1);
+                const mgc = this.sounds[0].mgc.slice(0, this.mel_points+1);
+                const ap = await this.bap2ap(0).then(buf => buf.slice(0, this.f_points));
+*/
                 let length = this.cellToMSeconds(bpm, beats, s.start - lastIndex);
                 length /= this.frame_period;
                 length = Math.floor(length);
+/*                
+                for(let i = 0; i < length; i++){
+                    f0_buf.set(f0, f0_offset+i);
+                    mgc_buf.set(mgc, mgc_offset+i*mgc.length);
+                    ap_buf.set(ap, ap_offset+i*ap.length);
+                }
+*/
                 f0_buf.set(Array(length).fill(0), f0_offset);
                 mgc_buf.set(Array(length * (this.mel_points + 1)).fill(0), mgc_offset);
                 ap_buf.set(Array(length * this.f_points).fill(0), ap_offset);
+
                 f0_offset += length;
                 mgc_offset += length * (this.mel_points + 1);
                 ap_offset += length * this.f_points;
@@ -157,11 +171,6 @@ class World {
             const index = this.soundIndex.indexOf(s.lyric);
             await this.waitDownload(index);
             const original_ap = await this.bap2ap(index);
-            /*
-                        if (!this.sounds[index] || !this.sounds[index]["sp"] || !this.sounds[index]["ap"]) {
-                            await Promise.all([this.mgc2sp(index), this.bap2ap(index)]);
-                        }
-            */
             const _f0 = this.makePitch(this.sounds[index].f0, this.pitchToMidiNum(s.pitch, basePitch, verticalNum));
             const [f0, mgc, ap] = this.alignLength(_f0, this.sounds[index].mgc, original_ap, bpm, beats, s.end - s.start + 1);
             f0_buf.set(f0, f0_offset);
@@ -219,7 +228,7 @@ class World {
         return [_f0, _mgc, _ap];
     }
 
-    linear(y2, y1, x) {
+    linear(y1, y2, x) {
         return (y2 - y1) * x + y1;
     }
 
