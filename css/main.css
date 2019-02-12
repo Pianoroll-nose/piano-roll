@@ -289,8 +289,10 @@ p.parameter{
 #piano-container{
     grid-row: 4;
     grid-column: 1;
+    /*
     margin-bottom: -20px;
     padding-bottom: 20px;
+    */
     overflow-y: scroll;
     overflow-x: hidden;
     position: relative;
@@ -311,11 +313,11 @@ p.parameter{
 #v-scroll-container{
     grid-row: 4; 
     grid-column: 3; 
-    width: 20px; 
-    background-color: white; 
+    width: 20px;
+    background-color: black; 
     z-index: 2;
     display: grid;
-    grid-template-rows: 1fr 20px 20px 20% 5%;
+    grid-template-rows: 1fr 20px 20px;
     grid-template-columns: 1fr;
     grid-gap: 1%;
 }
@@ -362,28 +364,12 @@ p.parameter{
     grid-row: 3;
 }
 
-#v-scroll-container > input {
-    width: 100%;
-    grid-row: 4;
-    height: 100%;
-    /*transform: rotate(90deg);*/
-}
-
-#v-scroll-container > output{
-    width: 100%;
-    grid-row: 5;
-    height: 20px;
-    display: none;
-    /*transform: rotate(90deg);*/
-    font-size: 0.01px;
-}
-
 #h-scroll-container{
     grid-row: 5; 
     grid-column: 2; 
     height: 20px; 
     background-color: black;
-    z-index: 2;
+    z-index: 3;
     display: grid;
     grid-template-columns: 1fr 20px 20px 20% 5%;
     grid-template-rows: 1fr;
@@ -393,7 +379,7 @@ p.parameter{
 #h-scroll{
     width: calc(100% - 1px);
     height: calc(100% - 1px);
-    z-index: 2;
+    z-index: 3;
     grid-column: 1;
     overflow-x: hidden;
     background-color: white;
@@ -445,15 +431,11 @@ p.parameter{
 
 #piano{
     position: absolute;
-    margin-bottom: calc(30px - 5px);
-    background-color: white;
     border-bottom: 1px solid #00ff00;
 }
 
 #canvas-container {
     position: relative;
-    width: calc(3000px + 20px);
-    height: 1000px;
 }
 
 #bar{

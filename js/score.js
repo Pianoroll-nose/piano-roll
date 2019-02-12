@@ -7,19 +7,7 @@ class Score {
         this.verticalNum = verticalNum;
 
         this.score = [];
-        this.scoreStack = [];
-        this.scoreStack.push(null);
-        this.scoreStack.add = (index, removed, added, flag) => {
-            this.scoreStack.splice(this.stackTop + 1, this.score.length - this.stackTop + 1);
-            this.scoreStack.push({
-                index: index,
-                removed: removed,
-                added: added,
-                shouldContinue: flag
-            });
-            this.stackTop = this.scoreStack.length - 1;
-        }
-        this.stackTop = 0;
+        this.scoreStack = new ScoreStack();
 
         this.mouseDown = false;
         this.isClicked = false;
@@ -114,27 +102,27 @@ class Score {
     }
 
     undo() {
-        let top = this.scoreStack[this.stackTop];
+        const top = this.scoreStack.pop();
         if (top !== null) {
             Array.prototype.splice.apply(this.score, [top.index, top.added.length].concat(top.removed));
-            this.stackTop--;
+            this.scoreStack.decTop();
             while (top.shouldContinue) {
-                top = this.scoreStack[this.stackTop];
+                const top = this.scoreStack[this.stackTop];
                 Array.prototype.splice.apply(this.score, [top.index, top.added.length].concat(top.removed));
-                this.stackTop--;
+                this.scoreStack.decTop();
             }
         }
         this.draw();
     }
 
     redo() {
-        if (this.stackTop + 1 < this.scoreStack.length) {
-            this.stackTop++;
-            let top = this.scoreStack[this.stackTop];
+        if (this.scoreStack.canRedo()) {
+            this.scoreStack.incTop();
+            const top = this.scoreStack.pop();
             Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
             while (top.shouldContinue) {
-                this.stackTop++;
-                let top = this.scoreStack[this.stackTop];
+                this.scoreStack.incTop();
+                const top = this.scoreStack.pop();
                 Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
             }
         }
@@ -153,8 +141,12 @@ class Score {
         this.setScore([]);
     }
 
+    selectAll() {
+        this.selectedNotes = [];
+    }
+
     setScore(score) {
-        this.scoreStack.add(0, this.score, score);
+        this.scoreStack.push(0, this.score, score, false);
         this.score = score.concat();
         this.draw();
     }
@@ -162,18 +154,18 @@ class Score {
     removeSelectedNotes(flag) {
         this.selectedNotes.sort((a, b) => b.index - a.index);
         for (let s of this.selectedNotes) {
-            this.scoreStack.add(s.index, this.score.splice(s.index, 1), [], flag);
+            this.scoreStack.push(s.index, this.score.splice(s.index, 1), [], flag);
             flag = true;
         }
         this.selectedNotes = [];
         this.draw();
-        return flag
+        return flag;
     }
 
     //考え直す必要あり
     addNotes(objs) {
         let alreadyContinued = false;
-        //選択されているノートを一旦削除
+        //選択されているノートを一旦削除(複数選択されていた時用)
         alreadyContinued = this.removeSelectedNotes(alreadyContinued);
 
         for (let i = 0, obj_length = objs.length; i < obj_length; i++) {
@@ -223,7 +215,7 @@ class Score {
             let deleteNum = shouldDelete ? i_e - i_s : 0;
 
             const removed = Array.prototype.splice.apply(this.score, [i_s, deleteNum].concat(objList));
-            this.scoreStack.add(i_s, removed, objList, alreadyContinued);
+            this.scoreStack.push(i_s, removed, objList, alreadyContinued);
             alreadyContinued = true;
         }
     }
@@ -470,5 +462,39 @@ class Score {
         }
 
         move(diffX, diffY, xIndex);
+    }
+}
+
+class ScoreStack {
+    constructor() {
+        this.stack = [null];
+        this.top = 0;
+    }
+
+    push(index, removed, added, flag) {
+        this.stack.splice(this.stackTop + 1, this.stack.length - this.stackTop + 1);
+        this.stack.push({
+            index: index,
+            removed: removed,
+            added: added,
+            shouldContinue: flag
+        });
+        this.top = this.stack.length - 1;
+    }
+
+    pop() {
+        return this.stack[this.top];
+    }
+
+    incTop() {
+        this.top++;
+    }
+
+    decTop() {
+        this.top--;
+    }
+
+    canRedo() {
+        return this.top + 1 < this.stack.length;
     }
 }

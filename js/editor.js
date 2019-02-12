@@ -1,4 +1,3 @@
-//打ち込み画面を管理するクラス
 class Editor {
     constructor(verticalNum, horizontalNum, measureNum, beats, mode) {
         this.verticalNum = verticalNum;
