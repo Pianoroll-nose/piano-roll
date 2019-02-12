@@ -23,6 +23,10 @@ class Util {
         return this.getSoundIndex().includes(lyric);
     }
 
+    static getPitchList(){ 
+        return ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+    }
+
     downloadScore(score, notesPerMeasure, beats) {
         const xml = this.musicXML.create(score, notesPerMeasure, beats);
 
@@ -79,16 +83,6 @@ class Util {
         }, 0);
     }
 
-    playAudio(audioData) {
-        const wav = this.createWav(audioData);
-        const audio = document.getElementById("audio");
-        audio.src = URL.createObjectURL(new Blob([wav], {'type': 'audio/wav'}));
-        audio.play();
-        setTimeout(() => {
-            URL.revokeObjectURL(audio.src);
-        }, 0);
-    }
-    
     openScore() {
         const showDialog = () => {
             return new Promise((resolve, reject) => {

@@ -46,8 +46,7 @@ class World {
                 }
             }
         }
-        load();
-        this.worker = new Worker('worker.js');
+        this.worker = new Worker('js/worker.js');
         this.worker.postMessage({
             message: 'init'
         });
@@ -57,6 +56,7 @@ class World {
                 this.isInitialized = true;
         });
         this.audioCtx = context;
+        load();
     }
 
     waitDownload(index) {
@@ -71,30 +71,6 @@ class World {
             }
             wait();
         });
-    }
-
-    async mgc2sp(index) {
-        await this.waitDownload(index);
-
-        const mgc_size = this.sounds[index]["mgc"].length * this.sounds[index]["mgc"].BYTES_PER_ELEMENT;
-        const mgc_ptr = Module._malloc(mgc_size);
-        let mgc_heap = new Uint8Array(Module.HEAPU8.buffer, mgc_ptr, mgc_size);
-        mgc_heap.set(new Uint8Array(this.sounds[index]["mgc"].buffer));
-
-        const out = new Float64Array(this.sounds[index]["mgc"].length / (this.mel_points + 1) * this.f_points);
-        const out_size = out.length * out.BYTES_PER_ELEMENT;
-        const out_ptr = Module._malloc(out_size);
-        let out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
-        out_heap.set(new Uint8Array(out.buffer));
-        console.time('mgc2sp');
-        await this._mgc2sp(mgc_ptr, this.sounds[index]["mgc"].length, this.mel_points, this.fft_size, 3, 0.544, 0, 0, 0, 0, out_ptr)
-        console.timeEnd('mgc2sp');
-        out_heap = new Uint8Array(Module.HEAPU8.buffer, out_ptr, out_size);
-        const result = new Float64Array(out_heap.buffer, out_heap.byteOffset, out.length);
-        this.sounds[index]["sp"] = new Float64Array(result);
-        Module._free(mgc_heap.byteOffset);
-        Module._free(out_heap.byteOffset);
-        delete this.sounds[index]["mgc"];
     }
 
     async bap2ap(index) {
@@ -115,8 +91,6 @@ class World {
         }
         console.timeEnd('bap2ap');
         return ap;
-        this.sounds[index]["ap"] = ap;
-        delete this.sounds[index]["bap"];
     }
 
     async scoreToBuffer(score, basePitch, verticalNum, bpm, beats) {
@@ -193,7 +167,7 @@ class World {
     }
 
     pitchToMidiNum(pitch, basePitch, verticalNum) {
-        const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+        const pitchList = Util.getPitchList();
         const b_pitch = basePitch.match(/[A-G]?/)[0];
         const b_octave = basePitch.match(/\d/)[0];
 
@@ -203,6 +177,7 @@ class World {
     }
 
     alignLength(f0, mgc, ap, bpm, beats, length) {
+        const linear = (y1, y2, x) => (y2 - y1) * x +y1;
         const m_sec = this.cellToMSeconds(bpm, beats, length);
         const times = (f0.length * this.frame_period) / m_sec;
         const f_points = this.f_points;
@@ -217,19 +192,15 @@ class World {
             const newIdx = i * times;
             const x = newIdx - Math.floor(newIdx);
             for (let j = 0; j < f_points; j++) {
-                _ap[i * f_points + j] = this.linear(ap[Math.floor(newIdx) * f_points + j], ap[Math.ceil(newIdx) * f_points + j], x);
+                _ap[i * f_points + j] = linear(ap[Math.floor(newIdx) * f_points + j], ap[Math.ceil(newIdx) * f_points + j], x);
             }
             for (let j = 0; j < mel_points; j++) {
-                _mgc[i * mel_points + j] = this.linear(mgc[Math.floor(newIdx) * mel_points + j], mgc[Math.ceil(newIdx) * mel_points + j], x);
+                _mgc[i * mel_points + j] = linear(mgc[Math.floor(newIdx) * mel_points + j], mgc[Math.ceil(newIdx) * mel_points + j], x);
             }
-            _f0[i] = this.linear(f0[Math.floor(newIdx)], f0[Math.ceil(newIdx)], x);
+            _f0[i] = linear(f0[Math.floor(newIdx)], f0[Math.ceil(newIdx)], x);
         }
 
         return [_f0, _mgc, _ap];
-    }
-
-    linear(y1, y2, x) {
-        return (y2 - y1) * x + y1;
     }
 
     cellToMSeconds(bpm, beats, length) {

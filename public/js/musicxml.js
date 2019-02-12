@@ -218,7 +218,7 @@ class MusicXML {
     }
 
     numToPitch(num) {
-        const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+        const pitchList = Util.getPitchList();
         const pitch = pitchList[(this.verticalNum - num - 1) % 12];
         const octave = this.baseOctave + Math.floor((this.verticalNum - num - 1) / 12);
         const alter = pitch.match(/\+/) || [null];
@@ -227,7 +227,7 @@ class MusicXML {
     }
 
     pitchToNum(p, acc, alter) {
-        const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+        const pitchList = Util.getPitchList();
         const sharpOrFlat = {'sharp': 1, 'flat': -1};
         const pitch = p.match(/[A-G]?/)[0];
         const octave = p.match(/\d/)[0];

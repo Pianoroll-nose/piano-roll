@@ -10,9 +10,12 @@ class Menu {
         this.mSeconds = 0;
         this.bpm = 120;
         this.mode = 1;
+        this.defaultSize = {
+            'w': 3000,
+            'h': 1000
+        };
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         this.audioCtx = new AudioContext();
-        //this.audioCtx.suspend();
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);
@@ -24,6 +27,9 @@ class Menu {
     }
 
     init() {
+        this.setWidth(this.defaultSize.w);
+        this.setHeight(this.defaultSize.h);
+
         document.getElementsByName('mode').forEach((e) => {
             e.onchange = () => {
                 this.mode = modes[e.value];
@@ -48,7 +54,6 @@ class Menu {
 
         });
         this.setClickEvent('backward', () => document.getElementById('editor-container').scrollLeft = 0);
-        //this.setClickEvent('pause', this.bar.pause.bind(this.bar));
         this.setClickEvent('stop', this.bar.stop.bind(this.bar));
         this.setClickEvent('forward', () => document.getElementById('editor-container').scrollLeft =
             document.getElementById('score').clientWidth);
@@ -76,13 +81,6 @@ class Menu {
                 alert(e);
             });
         });
-        /*
-        this.setClickEvent('updateBpm', () => {
-            const bpm = this.bpm = Math.min(400, Math.max(20, (parseFloat(document.getElementById('bpm_in').value) || this.bpm)));
-            document.getElementById('bpm').innerHTML = bpm.toFixed(2);
-            this.bar.updateBpm(bpm);
-        });
-        */
 
         document.querySelectorAll('.parameters').forEach((e) => {
             e.onclick = () => this.showInputDialog(e);
@@ -91,10 +89,8 @@ class Menu {
         //ToDo:もう少し綺麗に記述できそう
         document.querySelectorAll('.zoom').forEach((button, index) => {
             const id = button.id;
-            const _default = {
-                'w': 3000,
-                'h': 1000
-            }
+            const _default = this.defaultSize;
+
             const addOrSub = (id, value) => Math.ceil(
                 (id.endsWith('up')) ? value + _default[id[0]] * 0.1 : value - _default[id[0]] * 0.1);
             const container = document.getElementById('canvas-container');
@@ -113,22 +109,17 @@ class Menu {
         });
 
         this.setClickEvent('width_default', () => {
-            this.setWidth(3000);
+            this.setWidth(this.defaultSize.w);
         });
 
         this.setClickEvent('height_default', () => {
-            this.setHeight(1000);
+            this.setHeight(this.defaultSize.h);
         });
 
         document.getElementById('w-value-in').oninput = () => {
             const w = document.getElementById('w-value-in').value;
             this.setWidth(3000 * parseInt(w) / 100);
         }
-        document.getElementById('h-value-in').oninput = () => {
-            const h = document.getElementById('h-value-in').value;
-            this.setHeight(1000 * h / 100);
-        }
-
     }
 
     setClickEvent(id, func) {
@@ -156,9 +147,6 @@ class Menu {
         elements.forEach((element, index) => {
             element.height = height;
         });
-        const res = Math.floor(height / 1000 * 100);
-        document.getElementById('h-value-out').value = res + "%"
-        document.getElementById('h-value-in').value = res;
         this.editor.resize();
         this.bar.resize();
         this.piano.resize();
