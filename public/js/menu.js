@@ -2,7 +2,7 @@
 class Menu {
     constructor() {
         this.notesPerMeasure = 4;
-        this.measureNum = 30;
+        this.measureNum = 50;
         this.horizontalNum = this.measureNum * this.notesPerMeasure;
         this.verticalNum = 24;
         this.basePitch = 'C4';
@@ -11,7 +11,7 @@ class Menu {
         this.bpm = 120;
         this.mode = 1;
         this.defaultSize = {
-            'w': 3000,
+            'w': 5000,
             'h': 1000
         };
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -21,7 +21,8 @@ class Menu {
         this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
         this.bar = new Bar(this.bpm, this.horizontalNum, this.beats, this.audioCtx);
-        this.world = new World(this.audioCtx);
+        this.sptk = new Sptk(this.audioCtx);
+        //this.world = new World(this.audioCtx);
 
         this.init();
     }
@@ -43,10 +44,10 @@ class Menu {
             const element = document.getElementById('synthesis');
             element.className = 'synthesizing';
 
-            this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+            this.sptk.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
                 this.bpm, this.beats).then(buf => {
                     element.className = 'none';
-                    if(buf.length > 0) {
+                    if(buf != null) {
                         this.bar.play(buf, this.mSeconds);
                         this.mSeconds = 0;    
                     }
@@ -65,7 +66,7 @@ class Menu {
             const element = document.getElementById('synthesis');
             element.className = 'synthesizing';
 
-            this.world.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
+            this.sptk.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
                 this.bpm, this.beats).then(buf => {
                     this.util.downloadWav(buf);
                 });
@@ -97,13 +98,13 @@ class Menu {
             if (id.startsWith('w')) {
                 button.onclick = () => {
                     //this.setWidth(Math.max(2000, Math.min(6000, addOrSub(id, container.clientWidth - 20))));
-                    this.setWidth(Math.max(_default.w * 0.1, Math.min(_default.w * 2, addOrSub(id, container.clientWidth - 20))));
+                    this.setWidth(Math.max(_default.w * 0.1, Math.min(_default.w * 2, addOrSub(id, container.clientWidth-20))));
                 }
             }
             else {
                 button.onclick = () => {
                     //this.setHeight(Math.max(500, Math.min(3000, addOrSub(id, container.clientHeight))));
-                    this.setHeight(Math.max(1000 * 0.1, Math.min(1000 * 2, addOrSub(id, container.clientHeight))));
+                    this.setHeight(Math.max(_default.h * 0.1, Math.min(_default.h * 2, addOrSub(id, container.clientHeight))));
                 }
             }
         });
@@ -118,7 +119,7 @@ class Menu {
 
         document.getElementById('w-value-in').oninput = () => {
             const w = document.getElementById('w-value-in').value;
-            this.setWidth(3000 * parseInt(w) / 100);
+            this.setWidth(this.defaultSize.w * parseInt(w) / 100);
         }
     }
 
@@ -133,7 +134,7 @@ class Menu {
         elements.forEach((element, index) => {
             element.width = width;
         });
-        const res = Math.floor(width / 3000 * 100);
+        const res = Math.floor(width / this.defaultSize.w * 100);
         document.getElementById('w-value-out').value = res + "%"
         document.getElementById('w-value-in').value = res;
         this.editor.resize();

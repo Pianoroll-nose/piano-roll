@@ -49,8 +49,9 @@ class Util {
             }
         }
 
+        const fs = 16000;
         //ヘッダ情報の書き込み
-        //44100Hz, 16bit
+        //(fs)Hz, 16bit
         writeString(0, 'RIFF');
         view.setUint32(4, 32 + audioData.length * 2, true);
         writeString(8, 'WAVE');
@@ -58,8 +59,8 @@ class Util {
         view.setUint32(16, 16, true);
         view.setUint16(20, 1, true);
         view.setUint16(22, 1, true);
-        view.setUint32(24, 44100, true);
-        view.setUint32(28, 44100 * 2, true);
+        view.setUint32(24, 16000, true);
+        view.setUint32(28, 16000 * 2, true);
         view.setUint16(32, 2, true);
         view.setUint16(34, 16, true);
         writeString(36, 'data');

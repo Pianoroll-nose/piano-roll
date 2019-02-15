@@ -9,21 +9,29 @@ class Bar {
         this.horizontalNum = horizontalNum;
         this.beats = beats;
         this.id = null;
-        this.srcs = null;
+        this.src = null;
         this.resize();
 
         this.x = 0;
     }
 
-    play(srcs, mSec) {
+    play(buf, mSec) {
         if (this.id !== null) {
             this.x = 0;
             this.cancelAnimation();
         }
+        
+        const buffer = this.audioCtx.createBuffer(1, buf.length, 16000);
+        buffer.copyToChannel(buf, 0);
+        const src = this.audioCtx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(this.audioCtx.destination);
 
-        this.srcs = srcs;
+        this.src = src;
         const startX = this.x;
         const startTime = performance.now();
+
+        src.start(this.audioCtx.currentTime, mSec/1000);
 
         const animation = () => {
             this.drawBar();
@@ -61,11 +69,9 @@ class Bar {
         this.disp.innerHTML = '000:00.0000';
         this.drawBar();
 
-        if(this.srcs !== null){
-            for(let s of this.srcs) {
-                s.stop();
-            }
-            this.srcs = null;
+        if(this.src !== null){
+            this.src.stop();
+            this.src = null;
         }
         this.container.scrollLeft = 0;
     }
