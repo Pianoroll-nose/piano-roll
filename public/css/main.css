@@ -109,7 +109,8 @@ div::-webkit-scrollbar {
 }
 
 .menu > li:hover > ul > li:hover{
-    background-color: black;
+    background-color: #00ff00;
+    color: black;
 }
 
 .menu > li:hover > ul > li:last-child{
@@ -165,9 +166,26 @@ div::-webkit-scrollbar {
     width: 60vw;
     height: 60vh;
     z-index: 2;
-    background: transparent;
+    background: black;
     border: solid 1px #00ff00;
     border-radius: 1%;
+    text-align: center;
+}
+
+#input_parameter > button{
+    border: solid 1px #00ff00;
+    font-size: 1em;
+    padding: 0.5em;
+    margin: 1%;
+}
+
+#input_parameter > input{
+    border: solid 1px #00ff00;
+    color: black;
+    width: 10vw;
+    font-size: 1em;
+    padding: 0.5em;
+    margin: 1%;
 }
 
 #download_dialog{

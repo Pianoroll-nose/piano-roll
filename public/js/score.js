@@ -52,7 +52,7 @@ class Score {
 
                 //歌詞の描画
                 this.ctx.fillStyle = fontColor;
-                this.ctx.fillText(s.lyric, left, top+this.cellHeight*0.6, width);
+                this.ctx.fillText(s.lyric, left, top + this.cellHeight * 0.6, width);
             }
         }
 
@@ -102,15 +102,12 @@ class Score {
     }
 
     undo() {
-        const top = this.scoreStack.pop();
+        let top = this.scoreStack.pop();
         if (top !== null) {
-            Array.prototype.splice.apply(this.score, [top.index, top.added.length].concat(top.removed));
-            this.scoreStack.decTop();
-            while (top.shouldContinue) {
-                const top = this.scoreStack[this.stackTop];
-                Array.prototype.splice.apply(this.score, [top.index, top.added.length].concat(top.removed));
-                this.scoreStack.decTop();
+            for (let i = top.index.length-1; i >= 0; i--) {
+                Array.prototype.splice.apply(this.score, [top.index[i], top.added[i].length].concat(top.removed[i]));
             }
+            this.scoreStack.decTop();
         }
         this.draw();
     }
@@ -118,12 +115,9 @@ class Score {
     redo() {
         if (this.scoreStack.canRedo()) {
             this.scoreStack.incTop();
-            const top = this.scoreStack.pop();
-            Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
-            while (top.shouldContinue) {
-                this.scoreStack.incTop();
-                const top = this.scoreStack.pop();
-                Array.prototype.splice.apply(this.score, [top.index, top.removed.length].concat(top.added));
+            let top = this.scoreStack.pop();
+            for (let i = 0, length = top.index.length; i < length; i++) {
+                Array.prototype.splice.apply(this.score, [top.index[i], top.removed[i].length].concat(top.added[i]));
             }
         }
         this.draw();
@@ -138,35 +132,52 @@ class Score {
     }
 
     clear() {
-        this.setScore([]);
+        this.selectAll();
+        this.removeSelectedNotes();
     }
 
     selectAll() {
-        this.selectedNotes = [];
+        this.selectedNotes = this.score.map((v, i) => {
+            return {
+                index: i,
+                diffX: 0,
+                diffY: 0
+            };
+        });
+        this.draw();
     }
 
     setScore(score) {
-        this.scoreStack.push(0, this.score, score, false);
+        this.scoreStack.push([0], [this.score], [score]);
         this.score = score.concat();
         this.draw();
     }
 
-    removeSelectedNotes(flag) {
+    //一時的に削除するときは引数にFalseを与える(addNotesからの呼び出し)
+    removeSelectedNotes(reallyDelete = true) {
         this.selectedNotes.sort((a, b) => b.index - a.index);
+        const added = [];
+        const removed = [];
+        const start = [];
         for (let s of this.selectedNotes) {
-            this.scoreStack.push(s.index, this.score.splice(s.index, 1), [], flag);
-            flag = true;
+            removed.push(this.score.splice(s.index, 1));
+            added.push([]);
+            start.push(s.index);
         }
+        if (reallyDelete)
+            this.scoreStack.push(start, removed, added);
         this.selectedNotes = [];
         this.draw();
-        return flag;
+
+        if (!reallyDelete) {
+            return { start, removed, added };
+        }
     }
 
     //考え直す必要あり
     addNotes(objs) {
-        let alreadyContinued = false;
-        //選択されているノートを一旦削除(複数選択されていた時用)
-        alreadyContinued = this.removeSelectedNotes(alreadyContinued);
+        //選択されているノートを一旦削除(ノートを移動する時用)
+        const { start, removed, added } = this.removeSelectedNotes(false);
 
         for (let i = 0, obj_length = objs.length; i < obj_length; i++) {
             const obj = objs[i];
@@ -214,10 +225,11 @@ class Score {
 
             let deleteNum = shouldDelete ? i_e - i_s : 0;
 
-            const removed = Array.prototype.splice.apply(this.score, [i_s, deleteNum].concat(objList));
-            this.scoreStack.push(i_s, removed, objList, alreadyContinued);
-            alreadyContinued = true;
+            removed.push(Array.prototype.splice.apply(this.score, [i_s, deleteNum].concat(objList)))
+            added.push(objList);
+            start.push(i_s);
         }
+        this.scoreStack.push(start, removed, added);
     }
 
     addTextBox(index) {
@@ -244,7 +256,7 @@ class Score {
             if (isCalled) return;
             isCalled = true;
             const add = Object.assign({}, this.score[index]);
-            if(Util.existsSound(txtBox.value))
+            if (Util.existsSound(txtBox.value))
                 add.lyric = txtBox.value;
             this.addNotes([add]);
             this.draw();
@@ -407,11 +419,11 @@ class Score {
         }
 
         if (this.scrollId !== null) {
-            if(0 <= x && x <= this.container.clientWidth && 0 <= y && y <= this.container.clientHeight) {
+            if (0 <= x && x <= this.container.clientWidth && 0 <= y && y <= this.container.clientHeight) {
                 clearTimeout(this.scrollId);
-                this.scrollId = null;    
+                this.scrollId = null;
             }
-            return ;
+            return;
         }
 
         //どうにかしたい
@@ -466,18 +478,33 @@ class Score {
 }
 
 class ScoreStack {
+
     constructor() {
+        /**
+         * stackは変更の差分を取っておく配列
+         * 先頭はnull
+         * 中身は、一度の操作(複数削除もありうる)における追加されたノートの配列、削除されたノートの配列、追加され(削除され?)始めたindexの配列
+         * (ex:{
+         *      index:[2, 1],
+         *      removed:[
+         *          [{start: 10, end: 14, lyric: "あ", pitch: 2}],
+         *          [{start: 6, end: 9, lyric: "あ", pitch: 1}]
+         *      ],
+         *      added:[
+         *          [],
+         *          []
+         *      ]
+         * }
+         */
         this.stack = [null];
         this.top = 0;
     }
-
-    push(index, removed, added, flag) {
+    push(index, removed, added) {
         this.stack.splice(this.stackTop + 1, this.stack.length - this.stackTop + 1);
         this.stack.push({
             index: index,
             removed: removed,
             added: added,
-            shouldContinue: flag
         });
         this.top = this.stack.length - 1;
     }
@@ -487,11 +514,15 @@ class ScoreStack {
     }
 
     incTop() {
-        this.top++;
+        const before = this.top;
+        this.top = Math.min(this.top + 1, this.stack.length - 1);
+        return before != this.top;
     }
 
     decTop() {
-        this.top--;
+        const before = this.top;
+        this.top = Math.max(this.top - 1, 0);
+        return before != this.top;
     }
 
     canRedo() {

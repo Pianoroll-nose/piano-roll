@@ -25,7 +25,12 @@ class Bar {
         buffer.copyToChannel(buf, 0);
         const src = this.audioCtx.createBufferSource();
         src.buffer = buffer;
-        src.connect(this.audioCtx.destination);
+        const gainNode = this.audioCtx.createGain();
+        gainNode.gain.value = 5;
+        src.connect(gainNode);
+        gainNode.connect(this.audioCtx.destination);
+        
+        //src.connect(this.audioCtx.destination);
 
         this.src = src;
         const startX = this.x;

@@ -47,6 +47,10 @@ class Editor {
         return this.score.score;
     }
 
+    selectAll() {
+        this.score.selectAll();
+    }
+
     setScore(score) {
         this.score.setScore(score);
     }

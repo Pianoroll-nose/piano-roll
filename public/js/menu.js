@@ -59,6 +59,7 @@ class Menu {
         this.setClickEvent('forward', () => document.getElementById('editor-container').scrollLeft =
             document.getElementById('score').clientWidth);
         //this.setClickEvent('clear', this.editor.clear.bind(this.editor));
+        this.setClickEvent('selectAll', this.editor.selectAll.bind(this.editor));
         this.setClickEvent('remove', this.editor.remove.bind(this.editor));
         this.setClickEvent('d-wav', () => this.showDownloadDialog('wav'));
         this.setClickEvent('d-score', () => this.showDownloadDialog('score'));
