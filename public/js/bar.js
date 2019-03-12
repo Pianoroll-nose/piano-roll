@@ -25,18 +25,19 @@ class Bar {
         buffer.copyToChannel(buf, 0);
         const src = this.audioCtx.createBufferSource();
         src.buffer = buffer;
+/*
         const gainNode = this.audioCtx.createGain();
         gainNode.gain.value = 5;
         src.connect(gainNode);
         gainNode.connect(this.audioCtx.destination);
-        
-        //src.connect(this.audioCtx.destination);
+*/        
+        src.connect(this.audioCtx.destination);
 
         this.src = src;
         const startX = this.x;
         const startTime = performance.now();
 
-        src.start(this.audioCtx.currentTime, mSec/1000);
+        //src.start(this.audioCtx.currentTime, mSec/1000);
 
         const animation = () => {
             this.drawBar();

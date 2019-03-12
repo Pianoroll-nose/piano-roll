@@ -42,34 +42,8 @@ class Sptk {
 
         this.audioCtx = context;
         this.isInitialized = false;
-        ///*
-        this.audioCtx.audioWorklet.addModule('js/processor.js').then(() => {
-            this.synthesisNode = new AudioWorkletNode(this.audioCtx, 'synthesis');
-            const src = this.audioCtx.createBuffer(1, 128, 16000);
-            const node = this.audioCtx.createBufferSource();
-            node.buffer = src;
-            node.connect(this.synthesisNode);
-            node.start();
-            //const osc = this.audioCtx.createOscillator();
-            //osc.connect(this.audioCtx.destination);
-            //osc.start();
-            //osc.connect(this.synthesisNode);
-            this.synthesisNode.connect(this.audioCtx.destination);
+        this.worker = new Worker('js/realtimeSptkWorker.js');
 
-            this.synthesisNode.port.start();
-            this.synthesisNode.port.onmessage = (e) => {
-                if (e.data.message === 'init') {
-                    this.isInitialized = true;
-                    this.synthesisNode.port.postMessage({
-                        message: 'init',
-                        win_shift: this.win_shift,
-                        order: this.order
-                    });
-                }
-            };
-        });
-        /*/
-        this.worker = new Worker('js/sptkWorker.js');
         this.worker.postMessage({
             message: 'init'
         });
@@ -77,7 +51,7 @@ class Sptk {
             if (e.data.message === 'init')
                 this.isInitialized = true;
         });
-        //*/
+
         load();
     }
 
@@ -203,37 +177,45 @@ class Sptk {
         const [f0, mcep] = await this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
         console.timeEnd('score2Buf');
         if (f0.length === 0) return null;
-        ///*
-        return new Promise((resolve, reject) => {
-            this.synthesisNode.port.postMessage({
-                message: 'synthesis',
-                args: [f0, mcep]
-            }, [f0.buffer, mcep.buffer]);
 
-            this.synthesisNode.port.onmessage = (e) => {
-                if (e.data.message === 'finish') {
-                    console.log(e.data.result);
-                    resolve(e.data.result);
-                }
-                if(e.data.message === 'check') {
-                    console.log(e.data.data);
-                }
-            };
-        });
-        /*/
+        const startSrc = (srcs, start, end, startTime) => {
+            let length = 0;
+            for(let i = start; i < end; i++) {
+                srcs[i].start(startTime + length, 0);
+                length += srcs[i].buffer.duration;
+
+            }
+            return startTime + length;
+        };
+
+
         return new Promise((resolve, reject) => {
+            let startTime = null;
+            let canStart = false;
+            const srcs = [];
+
             this.worker.postMessage({
                 message: 'synthesis',
                 args: [f0, mcep, this.order, this.win_shift]
             }, [f0.buffer, mcep.buffer]);
-     
+
             this.worker.onmessage = (e) => {
                 if (e.data.message === 'finish') {
-                    console.log(e.data.result);
+                    //startSrc(srcs, 0, srcs.length, this.audioCtx.currentTime);
                     resolve(e.data.result);
+                }
+                if (e.data.message === 'wav') {
+                    if(!startTime)  startTime = this.audioCtx.currentTime;
+                    const buffer = this.audioCtx.createBuffer(1, e.data.data.length, 16000);
+                    buffer.copyToChannel(e.data.data, 0);
+                    const src = this.audioCtx.createBufferSource();
+                    src.buffer = buffer;
+                    src.connect(this.audioCtx.destination);
+                    srcs.push(src);
+                    startTime = startSrc(srcs, srcs.length-1, srcs.length, startTime);
+                    //console.log(e.data.data);
                 }
             };
         });
-        //*/
     }
 }

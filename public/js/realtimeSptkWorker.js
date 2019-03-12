@@ -1,4 +1,4 @@
-importScripts('synthesis.old.js');
+importScripts('realtime_synthesis.js');
 
 self.addEventListener('message', (e) => {
     const message = e.data.message;
@@ -66,7 +66,8 @@ const synthesis = async (f0, mcep, order, win_shift) => {
     self._synthesis(f0_ptr, mcep_ptr, f0.length, mcep.length, out_ptr);
 
     const result = new Float64Array(Module.HEAPU8.buffer, out_ptr, out_length);
-    const max = result.reduce((l, r) => Math.max(Math.abs(l), Math.abs(r)), 1);
+    const max = Math.pow(2, 16);
+    //const max = result.reduce((l, r) => Math.max(Math.abs(l), Math.abs(r)), 1);
     const result_float = new Float32Array(result).map(e => e / max);
 
     console.log("finished");

@@ -15,7 +15,11 @@ class Menu {
             'h': 1000
         };
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        this.audioCtx = new AudioContext();
+        this.audioCtx = new AudioContext({
+            latencyHint: "interactive",
+            sampleRate: 16000
+        });
+        console.log(this.audioCtx.sampleRate);
 
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);

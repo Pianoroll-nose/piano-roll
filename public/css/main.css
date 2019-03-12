@@ -195,9 +195,25 @@ div::-webkit-scrollbar {
     width: 60vw;
     height: 60vh;
     z-index: 2;
-    background: rgb(225, 229, 224);
-    border: solid 1px black;
+    background: black;
+    border: solid 1px #00ff00;
     border-radius: 1%;
+}
+
+#download_dialog button{
+    border: solid 1px #00ff00;
+    font-size: 1em;
+    padding: 0.5em;
+    margin: 1%;
+}
+
+#download_dialog input{
+    border: solid 1px #00ff00;
+    color: black;
+    width: 60%;
+    font-size: 1em;
+    padding: 0.5em;
+    margin: 1%;
 }
 
 .none{
@@ -218,6 +234,8 @@ div::-webkit-scrollbar {
 
 .download{
     display: inline-block;
+    width: 45vw;
+    text-align: center;
 }
 
 
