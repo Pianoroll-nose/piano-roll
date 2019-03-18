@@ -209,7 +209,6 @@ class MusicXML {
 
         let depth = 0;
         return splitted.map((s) => {
-            console.log(s, depth);
             if(s.match(openAndClose))   return '\t'.repeat(depth)+s;
             if(s.match(none))           return '\t'.repeat(depth)+s;
             if(s.match(close))          return '\t'.repeat(--depth)+s;
@@ -219,7 +218,7 @@ class MusicXML {
     }
 
     numToPitch(num) {
-        const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+        const pitchList = Util.getPitchList();
         const pitch = pitchList[(this.verticalNum - num - 1) % 12];
         const octave = this.baseOctave + Math.floor((this.verticalNum - num - 1) / 12);
         const alter = pitch.match(/\+/) || [null];
@@ -228,18 +227,18 @@ class MusicXML {
     }
 
     pitchToNum(p, acc, alter) {
-        const pitchList = ['C', 'C+', 'D', 'D+', 'E', 'F', 'F+', 'G', 'G+', 'A', 'A+', 'B'];
+        const pitchList = Util.getPitchList();
         const sharpOrFlat = {'sharp': 1, 'flat': -1};
         const pitch = p.match(/[A-G]?/)[0];
         const octave = p.match(/\d/)[0];
 
         //pitchOffsetの計算が怪しい
-        const pitchOffset = (pitchList.indexOf(pitch) - pitchList.indexOf(this.basePitch - 1) + 12) % 12;
+        const pitchOffset = (pitchList.indexOf(pitch) - pitchList.indexOf(this.basePitch) + 12) % 12;
         const octaveOffset = (octave - this.baseOctave) * 12;
         const accidental = (sharpOrFlat[acc] || 0) + alter;
 
         //scoreの方は上からpitchが上からなので変換
-        return this.verticalNum - (pitchOffset + octaveOffset + accidental);
+        return this.verticalNum - (pitchOffset + octaveOffset + accidental + 1);
     }
 
     //http://roomba.hatenablog.com/entry/2016/02/03/150354 (2018/10/26)
@@ -294,7 +293,9 @@ class MusicXML {
                 }
 
                 if(n.querySelector('lyric') !== null) {
-                    note.lyric = n.querySelector('lyric text').textContent;
+                    const lyric = n.querySelector('lyric text').textContent;
+                    if(Util.existsSound(lyric))
+                        note.lyric = lyric;
                 }
 
                 if(n.querySelector('rest') === null) {

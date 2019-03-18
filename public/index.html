@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>PianoRoll</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
+        crossorigin="anonymous">
+    <script src="js/scroll.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/musicxml.js"></script>
+    <script src="js/bar.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/sptk_realtime.js"></script>
+    <!--
+    <script src="js/sptk.js"></script>
+    -->
+    <script src="js/background.js"></script>
+    <script src="js/score.js"></script>
+    <script src="js/piano.js"></script>
+</head>
+
+<body onload="start()" oncontextmenu="return false;">
+    <div id="container">
+        <div id="download_dialog" class="none">
+            <div id="wav-container" class="none">
+                <input type="text" id="wavName" value="" placeholder="ファイル名を入力">
+                <button id="downloadWav">ダウンロード</button>
+            </div>
+            <div id="score-container" class="none">
+                <input type="text" id="scoreName" value="" placeholder="ファイル名を入力">
+                <button id="downloadScore">ダウンロード</button>
+            </div>
+            <button id="d_close">close</button>
+        </div>
+        <div id="input_parameter" class="none">
+            <input type="number" class="parameter">
+            <button id="set">ok</button>
+            <button id="p_close">close</button>
+        </div>
+        <div id="synthesis" class="none">
+            <div id="status">
+                <div></div>
+                <p>合成中</p>
+            </div>
+        </div>
+        <div id="menu-container">
+            <ul class="menu">
+                <li>
+                    ファイル
+                    <ul>
+                        <li id="openScore">開く</li>
+                        <li id="d-score">譜面を保存</li>
+                        <li id="d-wav">音声を保存</li>
+                    </ul>
+                </li>
+                <li>編集
+                    <ul>
+                        <li id="undo">undo</li>
+                        <li id="redo">redo</li>
+                        <li>切り取り</li>
+                        <li>コピー</li>
+                        <li>貼り付け</li>
+                        <li id="remove">削除</li>
+                        <li id="selectAll">全て選択</li>
+                    </ul>
+                </li>
+                <li>表示
+                    <ul>
+                        <li id="width_default">横幅を初期化</li>
+                        <li id="height_default">縦幅を初期化</li>
+                    </ul>
+                </li>
+                <li>トラック
+                    <ul>
+                        <li>トラックを追加</li>
+                        <li>トラックを削除</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div id="button-container">
+            <div class="play">
+                <button id="backward">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button id="play">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="stop">
+                    <i class="fas fa-stop"></i>
+                </button>
+                <button id="forward">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+            </div>
+            <div class="monitor">
+                <div class="parameters">
+                    <p>SECONDS</p>
+                    <p>000:00.0000</p>
+                </div>
+                <div class="parameters">
+                    <p>TEMPO</p>
+                    <p id="bpm">120.00</p>
+                </div>
+                <!--<div class="parameters">-->
+                <div>
+                    <p>BEAT</p>
+                    <p>4/4</p>
+                </div>
+            </div>
+            <div class="mode">
+                <input type="radio" id="select" name="mode" value="select">
+                <label for="select">
+                    <i class="fas fa-mouse-pointer"></i>
+                </label>
+                <input type="radio" id="pen" name="mode" value="pen" checked>
+                <label for="pen">
+                    <i class="fas fa-pen"></i>
+                </label>
+                <input type="radio" id="erase" name="mode" value="erase">
+                <label for="erase">
+                    <i class="fas fa-eraser"></i>
+                </label>
+            </div>
+        </div>
+        <div id="track-container">
+        </div>
+        <div id="piano-container">
+            <canvas id="piano" height="1000px"></canvas>
+        </div>
+        <div id="editor-container">
+            <div id="canvas-container">
+                <canvas id="background"></canvas>
+                <canvas id="bar"></canvas>
+                <canvas id="score"></canvas>
+                <!--
+                <canvas id="background" width="3000px" height="1000px"></canvas>
+                <canvas id="bar" width="3000px" height="1000px"></canvas>
+                <canvas id="score" width="3000px" height="1000px"></canvas>
+                -->
+            </div>
+        </div>
+        <div style="grid-row: 5; grid-column: 1; height: 20px; background-color: black; z-index: 2;"></div>
+        <div id="v-scroll-container">
+            <div id="v-scroll">
+                <div id="v-thumb"></div>
+            </div>
+            <button id="h-up" class="zoom">+</button>
+            <button id="h-down" class="zoom">-</button>
+        </div>
+        <div id="h-scroll-container">
+            <div id="h-scroll">
+                <div id="h-thumb">
+                </div>
+            </div>
+            <button id="w-up" class="zoom">+</button>
+            <button id="w-down" class="zoom">-</button>
+            <input type="range" name="w" id="w-value-in" min="10" max="200" step="10" value="100">
+            <output id="w-value-out">100%</output>
+        </div>
+        <div style="grid-row: 5; grid-column: 3; height: 20px; background-color: black; z-index: 2; margin-left: -5px;"></div>
+        <div style="grid-row: 5; grid-column: 3; height: 20px; background-color: black; z-index: 2; margin-top: -5px;"></div>
+    </div>
+<!-- Code injected by live-server -->
+<script type="text/javascript">
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					head.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					head.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script></body>
+
+</html>
