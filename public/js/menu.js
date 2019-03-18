@@ -15,17 +15,14 @@ class Menu {
             'h': 1000
         };
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        this.audioCtx = new AudioContext({
-            latencyHint: "interactive",
-            sampleRate: 16000
-        });
-        console.log(this.audioCtx.sampleRate);
+        this.audioCtx = new AudioContext();
 
+        this.audioManager = new AudioManager(this.audioCtx);
         this.editor = new Editor(this.verticalNum, this.horizontalNum, this.measureNum, this.beats, this.mode);
         this.piano = new Piano(this.verticalNum, this.basePitch);
         this.util = new Util(this.basePitch, this.verticalNum);
-        this.bar = new Bar(this.bpm, this.horizontalNum, this.beats, this.audioCtx);
-        this.sptk = new Sptk(this.audioCtx);
+        this.bar = new Bar(this.bpm, this.horizontalNum, this.beats, this.audioManager);
+        this.sptk = new Sptk(this.audioManager);
         //this.world = new World(this.audioCtx);
 
         this.init();
@@ -49,10 +46,10 @@ class Menu {
             element.className = 'synthesizing';
 
             this.sptk.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-                this.bpm, this.beats).then(buf => {
+                this.bpm, this.beats, this.mSeconds, true).then(isPlay =>{
                     element.className = 'none';
-                    if(buf != null) {
-                        this.bar.play(buf, this.mSeconds);
+                    if(isPlay) {
+                        this.bar.play(this.mSeconds);
                         this.mSeconds = 0;    
                     }
                 });
@@ -72,8 +69,9 @@ class Menu {
             element.className = 'synthesizing';
 
             this.sptk.synthesis(this.editor.getScore(), this.basePitch, this.verticalNum,
-                this.bpm, this.beats).then(buf => {
-                    this.util.downloadWav(buf);
+                this.bpm, this.beats, this.mSeconds, false).then(isPlay => {
+                    if(isPlay)
+                        this.util.downloadWav(this.audioManager.getAudioData());
                 });
             element.className = 'none';
         });
@@ -233,7 +231,7 @@ class Menu {
         const max = this.measureNum / this.bpm * 60 * 1000;
         const min = (parseInt(_min) || 0) + Math.floor(_sec / 60);
         const sec = _sec % 60;
-        const mSec = parseInt(_mSec.substr(0, 4)) / 10 || 0;
+        const mSec = parseInt(_mSec.substr(0, 4)) * 100 || 0;
 
         this.mSeconds = Math.min(max, Math.max(0, (parseFloat((min * 60 + sec) * 1000 + mSec) || this.mSeconds)));
         this.bar.updateSeconds(this.mSeconds);

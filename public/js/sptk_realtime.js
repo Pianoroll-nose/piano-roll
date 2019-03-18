@@ -1,5 +1,5 @@
 class Sptk {
-    constructor(context) {
+    constructor(audioManager) {
         this.soundIndex = Util.getSoundIndex();
 
         this.sounds = [];
@@ -40,9 +40,9 @@ class Sptk {
             }
         }
 
-        this.audioCtx = context;
         this.isInitialized = false;
         this.worker = new Worker('js/realtimeSptkWorker.js');
+        this.audioManager = audioManager;
 
         this.worker.postMessage({
             message: 'init'
@@ -77,7 +77,7 @@ class Sptk {
             if (s.start - lastIndex > 0) {
                 length += this.cellToMSeconds(bpm, beats, s.start - lastIndex);
             }
-            const time_len = Math.floor(length / 1000 * this.fs / this.win_shift);
+            const time_len = Math.floor(length / 1000 * this.fs / this.win_shift)+1;
             f0_len += time_len;
             mcep_len += time_len * (this.order + 1);
             lastIndex = s.end + 1;
@@ -148,11 +148,11 @@ class Sptk {
 
     alignLength(f0, mcep, bpm, beats, length) {
         const linear = (y1, y2, x) => (y2 - y1) * x + y1;
-        const m_sec = this.cellToMSeconds(bpm, beats, length);
-        const times = f0.length / Math.ceil(m_sec / 1000 * this.fs / this.win_shift);
+        const mSec = this.cellToMSeconds(bpm, beats, length);
+        const times = f0.length / (Math.floor(mSec / 1000 * this.fs / this.win_shift)+1);
         const order = this.order + 1;
 
-        const time_length = Math.floor((f0.length - 1) / times);
+        const time_length = Math.floor(f0.length / times);
         const _f0 = new Float64Array(time_length);
         const _mcep = new Float64Array(time_length * order);
 
@@ -172,27 +172,17 @@ class Sptk {
         return 1000 * 60 * length / (bpm * beats);
     }
 
-    async synthesis(score, basePitch, verticalNum, bpm, beats) {
+    async synthesis(score, basePitch, verticalNum, bpm, beats, mSec, isPlay) {
         console.time('score2Buf');
         const [f0, mcep] = await this.scoreToBuffer(score, basePitch, verticalNum, bpm, beats);
         console.timeEnd('score2Buf');
-        if (f0.length === 0) return null;
-
-        const startSrc = (srcs, start, end, startTime) => {
-            let length = 0;
-            for(let i = start; i < end; i++) {
-                srcs[i].start(startTime + length, 0);
-                length += srcs[i].buffer.duration;
-
-            }
-            return startTime + length;
-        };
-
+        if (f0.length === 0) return false;
+        //途中から再生しようとしても、それ以降に再生する部分がないとき
+        if ((f0.length - 1) * this.win_shift / this.fs < mSec / 1000) return false;
 
         return new Promise((resolve, reject) => {
-            let startTime = null;
-            let canStart = false;
-            const srcs = [];
+            let index = 0;
+            let length = 0;
 
             this.worker.postMessage({
                 message: 'synthesis',
@@ -201,19 +191,16 @@ class Sptk {
 
             this.worker.onmessage = (e) => {
                 if (e.data.message === 'finish') {
-                    //startSrc(srcs, 0, srcs.length, this.audioCtx.currentTime);
-                    resolve(e.data.result);
+                    this.audioManager.setAudioData(e.data.result.slice(mSec/1000*this.fs, e.data.result.length));
+                    if(!isPlay)  resolve(true);
                 }
                 if (e.data.message === 'wav') {
-                    if(!startTime)  startTime = this.audioCtx.currentTime;
-                    const buffer = this.audioCtx.createBuffer(1, e.data.data.length, 16000);
-                    buffer.copyToChannel(e.data.data, 0);
-                    const src = this.audioCtx.createBufferSource();
-                    src.buffer = buffer;
-                    src.connect(this.audioCtx.destination);
-                    srcs.push(src);
-                    startTime = startSrc(srcs, srcs.length-1, srcs.length, startTime);
-                    //console.log(e.data.data);
+                    length += e.data.data.length;
+                    if (mSec / 1000 <= length / this.fs) {
+                        if (index === 0 && isPlay) resolve(true);
+                        
+                        this.audioManager.setSrc(e.data.data, index++);
+                    }
                 }
             };
         });

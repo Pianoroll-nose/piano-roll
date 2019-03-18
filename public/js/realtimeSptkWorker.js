@@ -57,8 +57,9 @@ const synthesis = async (f0, mcep, order, win_shift) => {
     mcep_heap.set(new Uint8Array(mcep.buffer));
 
     //exciteの出力の長さは(f0_len-1)*win_shift
-    const out_length =
-        f0.length - 1 < (mcep.length / (order + 1)) - 1 ? (f0.length - 1) * win_shift : (mcep.length / (order + 1) - 1) * win_shift;
+    //const out_length =
+    //    f0.length - 1 < (mcep.length / (order + 1)) - 1 ? (f0.length - 1) * win_shift : (mcep.length / (order + 1) - 1) * win_shift;
+    const out_length = (f0.length - 1) * win_shift;
     const out = new Float64Array(out_length);
     const out_ptr = Module._malloc(out.length * out.BYTES_PER_ELEMENT);
 
